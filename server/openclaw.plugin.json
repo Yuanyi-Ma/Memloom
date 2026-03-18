@@ -1,0 +1,10 @@
+{
+  "id": "memloom",
+  "name": "忆织 (Memloom)",
+  "description": "忆织 — 从对话中无感提取知识，以创新方式帮你掌握",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {}
+  }
+}

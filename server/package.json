@@ -1,0 +1,37 @@
+{
+  "name": "memloom",
+  "version": "0.1.0",
+  "description": "Memloom (忆织) - 个人知识管理与间隔复习系统",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build": "tsc",
+    "dev:link": "npm run build && rm -rf ~/.openclaw/extensions/memloom && ln -sfn \"$(pwd)\" ~/.openclaw/extensions/memloom",
+    "dev:unlink": "rm -f ~/.openclaw/extensions/memloom"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.4.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/index.js"
+    ]
+  },
+  "files": [
+    "dist",
+    "openclaw.plugin.json"
+  ]
+}

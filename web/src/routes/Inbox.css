@@ -1,0 +1,133 @@
+.inbox-container {
+  min-height: calc(100vh - 80px);
+  position: relative;
+  /* subtle deep background glow */
+  background: radial-gradient(circle at 50% -20%, rgba(59, 130, 246, 0.15), transparent 60%);
+}
+
+/* Spotlight Search */
+.spotlight-search-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 10;
+}
+
+.spotlight-search {
+  background: rgba(30, 41, 59, 0.6) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.spotlight-search:focus-within {
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+/* Glass Filter Pills */
+.filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+.glass-filter-btn {
+  background: rgba(30, 41, 59, 0.4) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #94a3b8 !important;
+  transition: all 0.2s ease !important;
+  border-radius: 999px !important;
+}
+
+.glass-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+.glass-filter-btn[data-active="true"] {
+  background: rgba(59, 130, 246, 0.15) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+  color: #60a5fa !important;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+/* Card Grid — equal-height rows */
+.masonry-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .masonry-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .masonry-grid {
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+.masonry-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.masonry-item .glass-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.masonry-item .glass-card > .mantine-Group:last-of-type {
+  margin-top: auto;
+}
+
+
+/* Glass Card styling (reused from Home, optionally expanded here) */
+.glass-card {
+  background: rgba(30, 41, 59, 0.4) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Neon Glow Accents for Cards */
+.card-glow-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(16, 185, 129, 0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.glass-card:hover .card-glow-accent {
+  opacity: 1;
+}

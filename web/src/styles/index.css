@@ -1,0 +1,96 @@
+:root {
+  /* 背景层级 — 保留给自定义组件和 Mantine styles 覆盖 */
+  --color-bg-primary: #0F172A;
+  --color-bg-secondary: #1E293B;
+  --color-bg-tertiary: #334155;
+
+  /* 文本层级 */
+  --color-text-primary: #E2E8F0;
+  --color-text-secondary: #94A3B8;
+  --color-text-muted: #64748B;
+
+  /* 强调色 */
+  --color-accent-green: #10B981;
+  --color-accent-blue: #3B82F6;
+  --color-accent-red: #B91C1C;
+  --color-accent-amber: #F59E0B;
+
+  /* 边框 */
+  --color-border: #334155;
+  --color-border-hover: #475569;
+
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* 字体 */
+  --font-family: "Inter", "Noto Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Mantine 暗色覆盖：确保模态框和弹出层背景协调 */
+.mantine-Modal-content,
+.mantine-Notification-root {
+  background: var(--color-bg-secondary) !important;
+}
+
+/* Markdown 内容样式增强 */
+.mantine-TypographyStylesProvider-root {
+  color: var(--color-text-primary);
+}
+.mantine-TypographyStylesProvider-root h1,
+.mantine-TypographyStylesProvider-root h2,
+.mantine-TypographyStylesProvider-root h3 {
+  color: var(--color-text-primary);
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+}
+.mantine-TypographyStylesProvider-root code {
+  background: var(--color-bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+.mantine-TypographyStylesProvider-root pre {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  overflow-x: auto;
+}
+.mantine-TypographyStylesProvider-root blockquote {
+  border-left: 3px solid var(--color-accent-green);
+  padding-left: 12px;
+  color: var(--color-text-secondary);
+}
+.mantine-TypographyStylesProvider-root a {
+  color: var(--color-accent-blue);
+}
+
+/* 闪烁光标动画 */
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* 浮动动画 — 用于 hero 插图和奖杯 */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}

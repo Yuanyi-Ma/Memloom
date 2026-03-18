@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            platform: macos-arm64
+          - os: ubuntu-latest
+            platform: linux-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # 后端：安装依赖 + 编译
+      - name: Build server
+        working-directory: server
+        run: |
+          npm install
+          npx tsc
+
+      # 前端：安装依赖 + 构建
+      - name: Build web
+        working-directory: web
+        run: |
+          npm install
+          npm run build
+
+      # 打包 release
+      - name: Package release
+        run: |
+          RELEASE_DIR="memloom"
+          mkdir -p "$RELEASE_DIR/server"
+          mkdir -p "$RELEASE_DIR/web"
+
+          # 后端：编译产物 + 运行时依赖
+          cp -r server/dist "$RELEASE_DIR/server/"
+          cp -r server/node_modules "$RELEASE_DIR/server/"
+          cp server/package.json "$RELEASE_DIR/server/"
+          cp server/openclaw.plugin.json "$RELEASE_DIR/server/"
+
+          # 前端：构建产物
+          cp -r web/dist "$RELEASE_DIR/web/"
+
+          # Skills、脚本、文档
+          cp -r skills "$RELEASE_DIR/"
+          cp -r scripts "$RELEASE_DIR/"
+          cp -r IMAGE "$RELEASE_DIR/"
+          cp README.md LICENSE "$RELEASE_DIR/"
+
+          # 打包
+          tar czf "memloom-${{ matrix.platform }}.tar.gz" "$RELEASE_DIR"
+
+      # 上传到 GitHub Release
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: memloom-${{ matrix.platform }}.tar.gz
