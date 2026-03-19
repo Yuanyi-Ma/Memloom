@@ -1,0 +1,20 @@
+{
+  "name": "memloom",
+  "description": "忆织 (Memloom) — 个人知识管理与间隔复习系统。自动从 AI 对话中提取知识，生成结构化卡片，并通过费曼学习法进行高效复习。",
+  "description_en": "Memloom — Personal knowledge management and spaced repetition system. Extracts knowledge from AI conversations, creates structured cards, and enables effective review through Feynman technique.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Memloom Contributors"
+  },
+  "repository": "https://github.com/Yuanyi-Ma/Memloom",
+  "homepage": "https://github.com/Yuanyi-Ma/Memloom",
+  "license": "MIT",
+  "keywords": [
+    "knowledge-management",
+    "spaced-repetition",
+    "feynman",
+    "learning",
+    "review"
+  ],
+  "category": "productivity"
+}
