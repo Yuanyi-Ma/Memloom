@@ -9,7 +9,7 @@ import { readConfig, getCategories } from './utils/config.js';
 import { REJECTED_FILE } from './services/negativeSamples.js';
 import { createStatsHandler } from './routes/stats.js';
 import { startExtractTimer } from './services/extractor.js';
-import { insertCard, getCardIndex, searchCardsByTitle } from './db/queries.js';
+import { insertCard, searchCardsByTitle } from './db/queries.js';
 import { generateCardId } from './utils/id.js';
 import { CardInput } from './db/types.js';
 import { ConversationChunk } from './services/extractor.js';
@@ -42,7 +42,7 @@ function adaptHandler(handler: HttpHandler): (rawReq: any, rawRes: any) => Promi
     // Extract path params (e.g. :id from /api/cards/:id or /api/cards/:id/schedule)
     const pathParts = url.pathname.split('/').filter(Boolean);
     const params: Record<string, string> = {};
-    const reserved = ['cards', 'review', 'import', 'stats', 'ingest', 'capture', 'start', 'chat', 'schedule', 'summary', 'markdown', 'config', 'categories', 'status', 'history', 'category', 'skills', 'gateway-token'];
+    const reserved = ['cards', 'review', 'import', 'stats', 'ingest', 'capture', 'start', 'chat', 'schedule', 'summary', 'markdown', 'config', 'categories', 'status', 'history', 'category', 'skills', 'gateway-token', 'validate', 'check-duplicate', 'extract-history'];
     // Scan for non-reserved segments after the resource name (index 1 = resource)
     for (let i = 2; i < pathParts.length; i++) {
       if (!reserved.includes(pathParts[i]!)) {
@@ -278,36 +278,7 @@ export default function register(api: OpenClawPluginApi) {
     },
   });
 
-  // === before_prompt_build Hook：注入分类列表 + 知识索引 ===
-  api.on('before_prompt_build', (_event, _ctx) => {
-    const cats = getCategories();
-    const index = getCardIndex(db);
-    
-    const lines: string[] = [
-      `[忆织配置] 当前可用的知识分类：${cats.join(' | ')}`,
-      `category 字段必须严格从上述分类中选择。`,
-    ];
 
-    if (index.length > 0) {
-      lines.push('');
-      lines.push(`[忆织知识索引] 当前已入库 ${index.length} 条知识：`);
-      lines.push('| # | 标题 | 摘要 |');
-      lines.push('|---|------|------|');
-      const maxEntries = Math.min(index.length, 200);
-      for (let i = 0; i < maxEntries; i++) {
-        lines.push(`| ${i + 1} | ${index[i].title} | ${index[i].brief_short} |`);
-      }
-      if (index.length > maxEntries) {
-        lines.push(`| ... | (还有 ${index.length - maxEntries} 条未列出) | |`);
-      }
-      lines.push('');
-      lines.push('提取知识前请检查上表，如发现可能重复的条目，先调用 kb_check_duplicate 工具确认后再决定是否跳过。');
-    }
-
-    return {
-      appendSystemContext: lines.join('\n'),
-    };
-  }, { priority: 10 });
 
   // === 定时提取：通过 Agent RPC 触发知识提取 ===
   startExtractTimer(async (chunks: ConversationChunk[]) => {

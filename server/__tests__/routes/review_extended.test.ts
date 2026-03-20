@@ -27,7 +27,7 @@ function makeRes(): HttpResponse & { _status: number; _body: any } {
 
 function makeCard(id: string, overrides?: Partial<CardInput>): CardInput {
   return {
-    id, title: 'Test', category: 'programming',
+    id, title: 'Test', category: 'ai',
     tags: ['test'], brief: 'Brief', detail: 'Detail', feynman_seed: 'Question',
     ...overrides,
   };
@@ -53,15 +53,15 @@ describe('Review Route - 边界条件补充', () => {
   });
 
   it('POST /api/review/start 按 category 过滤', async () => {
-    insertCard(db, makeCard('kb-rev01', { category: 'programming' }));
-    insertCard(db, makeCard('kb-rev02', { category: 'academic' }));
+    insertCard(db, makeCard('kb-rev01', { category: 'ai' }));
+    insertCard(db, makeCard('kb-rev02', { category: 'blockchain' }));
     db.prepare('UPDATE card_schedule SET next_review_date = ? WHERE card_id = ?').run('2020-01-01', 'kb-rev01');
     db.prepare('UPDATE card_schedule SET next_review_date = ? WHERE card_id = ?').run('2020-01-01', 'kb-rev02');
 
     const res = makeRes();
     await handler(makeReq({
       url: '/api/review/start',
-      body: { category: 'programming' }
+      body: { category: 'ai' }
     }), res);
     expect(res._status).toBe(200);
     expect(res._body.queue).toContain('kb-rev01');

@@ -29,7 +29,7 @@ function makeRes(): HttpResponse & { _status: number; _body: any } {
 
 function makeCard(id: string, overrides?: Partial<CardInput>): CardInput {
   return {
-    id, title: 'Test', category: 'programming',
+    id, title: 'Test', category: 'ai',
     tags: ['test'], brief: 'Brief', detail: 'Detail', feynman_seed: 'Q',
     ...overrides,
   };
@@ -152,11 +152,11 @@ describe('Cards Route - 边界条件补充', () => {
     const res = makeRes();
     await handler(makeReq({
       method: 'PATCH', url: '/api/cards/kb-cat01/category',
-      params: { id: 'kb-cat01' }, body: { category: 'academic' }
+      params: { id: 'kb-cat01' }, body: { category: 'blockchain' }
     }), res);
     expect(res._status).toBe(200);
     expect(res._body.success).toBe(true);
-    expect(res._body.category).toBe('academic');
+    expect(res._body.category).toBe('blockchain');
   });
 
   it('PATCH /api/cards/:id/category 无 category 返回 400', async () => {
@@ -184,7 +184,7 @@ describe('Cards Route - 边界条件补充', () => {
     const res = makeRes();
     await handler(makeReq({
       method: 'PATCH', url: '/api/cards//category',
-      params: {}, body: { category: 'academic' }
+      params: {}, body: { category: 'blockchain' }
     }), res);
     expect(res._status).toBe(400);
   });
@@ -207,11 +207,11 @@ describe('Cards Route - 边界条件补充', () => {
     expect(res._body.cards[0].status).toBe('pending');
   });
 
-  it('GET /api/cards?category=academic 按分类过滤', async () => {
-    insertCard(db, makeCard('kb-list03', { category: 'academic' }));
-    insertCard(db, makeCard('kb-list04', { category: 'programming' }));
+  it('GET /api/cards?category=blockchain 按分类过滤', async () => {
+    insertCard(db, makeCard('kb-list03', { category: 'blockchain' }));
+    insertCard(db, makeCard('kb-list04', { category: 'ai' }));
     const res = makeRes();
-    await handler(makeReq({ method: 'GET', url: '/api/cards', query: { category: 'academic' } }), res);
+    await handler(makeReq({ method: 'GET', url: '/api/cards', query: { category: 'blockchain' } }), res);
     expect(res._status).toBe(200);
     expect(res._body.cards.length).toBe(1);
   });

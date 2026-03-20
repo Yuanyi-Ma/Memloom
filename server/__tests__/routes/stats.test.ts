@@ -31,7 +31,7 @@ describe('Stats Route', () => {
   });
 
   it('GET /api/stats/summary returns counts', async () => {
-    insertCard(db, { id: 'kb-s01', title: 'T', category: 'programming', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
+    insertCard(db, { id: 'kb-s01', title: 'T', category: 'ai', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
     const res = makeRes();
     await handler(makeReq({}), res);
     expect(res._status).toBe(200);

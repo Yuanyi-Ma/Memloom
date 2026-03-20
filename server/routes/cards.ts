@@ -1,12 +1,14 @@
 import { Database } from 'better-sqlite3';
 import { HttpRequest, HttpResponse, HttpHandler } from '../types/plugin.js';
-import { queryCards, getCardById, softDeleteCard, insertCard, addNegativeFeedback, updateSchedule, addReviewRecord, updateCardStatus, updateCardCategory } from '../db/queries.js';
+import { queryCards, getCardById, softDeleteCard, insertCard, addNegativeFeedback, updateSchedule, addReviewRecord, updateCardStatus, updateCardCategory, searchCardsByTitle } from '../db/queries.js';
+import { normalizedSimilarity } from '../utils/similarity.js';
 import { appendNegativeSample } from '../services/negativeSamples.js';
 import { generateCardId } from '../utils/id.js';
 import { CardInput } from '../db/types.js';
 import { calculateNextSchedule } from '../services/scheduler.js';
 import { readFullSession } from '../services/extractor.js';
 import { triggerAgentRun } from '../services/gatewayClient.js';
+import { getCategories } from '../utils/config.js';
 
 export function createCardsHandler(db: Database): HttpHandler {
   return async (req: HttpRequest, res: HttpResponse) => {
@@ -25,6 +27,16 @@ export function createCardsHandler(db: Database): HttpHandler {
     // POST /api/capture
     if (req.method === 'POST' && req.url.includes('/capture')) {
       return handleCapture(db, req, res);
+    }
+
+    // POST /api/cards/validate
+    if (req.method === 'POST' && req.url.includes('/validate')) {
+      return handleValidate(req, res);
+    }
+
+    // POST /api/cards/check-duplicate
+    if (req.method === 'POST' && req.url.includes('/check-duplicate')) {
+      return handleCheckDuplicate(db, req, res);
     }
 
     // PATCH /api/cards/:id/schedule
@@ -102,17 +114,31 @@ function handleIngest(db: Database, req: HttpRequest, res: HttpResponse): boolea
     res.status(400).json({ error: 'Missing field: cards' }); return true;
   }
   const ingested: { title: string; brief: string }[] = [];
+  const skipped: { title: string; reason: string }[] = [];
   for (const raw of cards) {
+    // 服务端去重安全网
+    const existing = searchCardsByTitle(db, raw.title);
+    const tooSimilar = existing.find(e => {
+      const a = e.title.toLowerCase().replace(/[\s\-_、，,]/g, '');
+      const b = raw.title.toLowerCase().replace(/[\s\-_、，,]/g, '');
+      return a.includes(b) || b.includes(a) || normalizedSimilarity(a, b) > 0.7;
+    });
+    if (tooSimilar) {
+      skipped.push({ title: raw.title, reason: `与已有知识「${tooSimilar.title}」高度相似` });
+      continue;
+    }
+
     const id = generateCardId();
     const cardInput: CardInput = {
       id, title: raw.title, category: raw.category,
       tags: raw.tags || [], brief: raw.brief,
       detail: raw.detail, feynman_seed: raw.review_question || raw.feynman_seed || '',
+      status: 'pending',
     };
     insertCard(db, cardInput);
     ingested.push({ title: raw.title, brief: raw.brief });
   }
-  res.status(200).json({ ingested: ingested.length, cards: ingested });
+  res.status(200).json({ ingested: ingested.length, skipped: skipped.length, cards: ingested, skippedCards: skipped });
   return true;
 }
 
@@ -207,5 +233,78 @@ function handleCategoryUpdate(db: Database, req: HttpRequest, res: HttpResponse)
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }
+  return true;
+}
+function handleValidate(req: HttpRequest, res: HttpResponse): boolean {
+  const { card } = req.body as { card: any };
+  if (!card) {
+    res.status(400).json({ error: 'Missing field: card' });
+    return true;
+  }
+
+  const errors: string[] = [];
+  const cats = getCategories();
+
+  if (!card.title || card.title.trim().length === 0) {
+    errors.push('title 不能为空');
+  } else if (card.title.length > 15) {
+    errors.push(`title 超过 15 字限制（当前 ${card.title.length} 字）`);
+  }
+
+  if (!cats.includes(card.category)) {
+    errors.push(`category 必须是 ${cats.join(' / ')} 之一，当前值「${card.category}」不合法`);
+  }
+
+  if (!card.brief || card.brief.trim().length === 0) {
+    errors.push('brief 不能为空');
+  } else if (card.brief.length > 100) {
+    errors.push(`brief 超过 100 字限制（当前 ${card.brief.length} 字）`);
+  }
+
+  if (!card.detail || card.detail.trim().length === 0) {
+    errors.push('detail 不能为空');
+  } else if (card.detail.length < 150) {
+    errors.push(`detail 不足 150 字（当前 ${card.detail.length} 字）`);
+  } else if (card.detail.length > 300) {
+    errors.push(`detail 超过 300 字限制（当前 ${card.detail.length} 字）`);
+  }
+
+  if (!card.review_question || card.review_question.trim().length === 0) {
+    errors.push('review_question 不能为空');
+  }
+
+  if (errors.length > 0) {
+    res.status(200).json({ valid: false, errors });
+  } else {
+    res.status(200).json({ valid: true });
+  }
+  return true;
+}
+
+function handleCheckDuplicate(db: Database, req: HttpRequest, res: HttpResponse): boolean {
+  const { title } = req.body as { title: string };
+  if (!title) {
+    res.status(400).json({ error: 'Missing field: title' });
+    return true;
+  }
+
+  const matches = searchCardsByTitle(db, title);
+  if (matches.length === 0) {
+    res.status(200).json({ duplicates: [], message: '未找到相似条目，可安全入库。' });
+    return true;
+  }
+
+  const duplicates = matches.map((m, i) => ({
+    index: i + 1,
+    id: m.id,
+    title: m.title,
+    brief: m.brief,
+    detail: m.detail,
+  }));
+
+  res.status(200).json({
+    duplicates,
+    message: `发现 ${matches.length} 条可能相似的已有知识，请对比内容决定是否跳过。`,
+  });
   return true;
 }

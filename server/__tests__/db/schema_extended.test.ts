@@ -90,7 +90,7 @@ describe('Database Schema - 边界条件补充', () => {
   it('cards 表的各列默认值', () => {
     const db = initDatabase(':memory:');
     // 手动插入一行查看默认值
-    db.prepare('INSERT INTO cards (id, title, category, file_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run('test-id', 'Test', 'programming', '/path', '2026-03-12', '2026-03-12');
+    db.prepare('INSERT INTO cards (id, title, category, file_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)').run('test-id', 'Test', 'ai', '/path', '2026-03-12', '2026-03-12');
     const row = db.prepare('SELECT * FROM cards WHERE id = ?').get('test-id') as any;
     expect(row.status).toBe('active'); // DEFAULT 'active'
     expect(row.priority).toBe('normal'); // DEFAULT 'normal'

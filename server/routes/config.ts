@@ -1,4 +1,5 @@
 import { readConfig, writeConfig, getDefaultConfig } from '../utils/config.js';
+import { restartExtractTimer } from '../services/extractor.js';
 import { KBConfig } from '../db/types.js';
 import fs from 'fs';
 import path from 'path';
@@ -56,6 +57,13 @@ export function createConfigHandler(): (req: Req, res: Res) => Promise<boolean> 
       return true;
     }
 
+    // GET /api/config/extract-history
+    if (req.method === 'GET' && urlPath.endsWith('/extract-history')) {
+      const config = readConfig();
+      res.status(200).json(config.extractHistory || []);
+      return true;
+    }
+
     // GET /api/config
     if (req.method === 'GET') {
       const config = readConfig();
@@ -84,6 +92,12 @@ export function createConfigHandler(): (req: Req, res: Res) => Promise<boolean> 
       }
 
       writeConfig(updated);
+
+      // 间隔变化时重新调度提取定时器
+      if (body.extractIntervalMinutes !== undefined && body.extractIntervalMinutes !== current.extractIntervalMinutes) {
+        restartExtractTimer();
+      }
+
       res.status(200).json(updated);
       return true;
     }

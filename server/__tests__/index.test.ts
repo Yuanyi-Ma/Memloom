@@ -49,7 +49,5 @@ describe('Plugin Entry', () => {
     expect(routes.some(r => r.path.includes('/api/stats'))).toBe(true);
     // Tool
     expect(tools.some(t => t.name === 'kb_save_card')).toBe(true);
-    // Hook
-    expect(hooks.some(h => h.event === 'before_prompt_build')).toBe(true);
   });
 });

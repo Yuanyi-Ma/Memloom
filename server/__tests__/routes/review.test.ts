@@ -27,7 +27,7 @@ function makeRes(): HttpResponse & { _status: number; _body: any } {
 
 function makeCard(id: string): CardInput {
   return {
-    id, title: 'Test', category: 'programming',
+    id, title: 'Test', category: 'ai',
     tags: ['test'], brief: 'Brief', detail: 'Detail', feynman_seed: 'Question',
   };
 }

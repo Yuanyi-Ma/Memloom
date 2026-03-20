@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import { readConfig, updateLastExtractTime } from '../utils/config.js';
+import { readConfig, updateLastExtractTime, appendExtractHistory } from '../utils/config.js';
 
 export interface ConversationChunk {
   sessionId: string;
@@ -13,6 +13,9 @@ const AGENTS_DIR = path.join(os.homedir(), '.openclaw/agents');
 const SCAN_AGENTS = ['main', 'client'];
 
 let timer: ReturnType<typeof setInterval> | null = null;
+let delayTimer: ReturnType<typeof setTimeout> | null = null;
+let storedOnExtract: ((chunks: ConversationChunk[]) => Promise<void>) | null = null;
+let storedSessionsDir: string | undefined;
 
 /**
  * 扫描多个 agent 的 session JSONL 文件，提取指定时间后的对话消息。
@@ -61,6 +64,53 @@ export function scanNewSessionMessages(
   return results;
 }
 
+/** 执行一次提取周期 */
+async function doExtract(): Promise<void> {
+  if (!storedOnExtract) return;
+  try {
+    const cfg = readConfig();
+    const chunks = scanNewSessionMessages(cfg.lastExtractTime, storedSessionsDir);
+    updateLastExtractTime();
+    appendExtractHistory(chunks.length);
+    if (chunks.length > 0) {
+      await storedOnExtract(chunks);
+    }
+  } catch (err) {
+    console.warn('[KB] Extract timer error:', err);
+  }
+}
+
+/**
+ * 智能调度提取定时器。
+ * 根据 lastExtractTime 和当前间隔计算：
+ *   - 已超过间隔 → 立即触发一次，然后按间隔循环
+ *   - 未超过间隔 → 等待剩余时间后触发，然后按间隔循环
+ */
+function scheduleExtract(): void {
+  stopExtractTimer();
+  const config = readConfig();
+  if (config.extractIntervalMinutes === 0) return;
+
+  const intervalMs = config.extractIntervalMinutes * 60 * 1000;
+  const elapsed = Date.now() - new Date(config.lastExtractTime).getTime();
+
+  if (elapsed >= intervalMs) {
+    // 已超过间隔，立即触发一次，然后启动定期循环
+    console.log('[KB] Extract overdue, triggering immediately');
+    doExtract();
+    timer = setInterval(doExtract, intervalMs);
+  } else {
+    // 未超过间隔，等待剩余时间
+    const remaining = intervalMs - elapsed;
+    console.log(`[KB] Next extract in ${Math.round(remaining / 1000)}s`);
+    delayTimer = setTimeout(() => {
+      delayTimer = null;
+      doExtract();
+      timer = setInterval(doExtract, intervalMs);
+    }, remaining);
+  }
+}
+
 /**
  * 启动定时提取定时器。
  * onExtract 回调由调用方提供，封装 LLM 调用和入库逻辑。
@@ -69,35 +119,27 @@ export function startExtractTimer(
   onExtract: (chunks: ConversationChunk[]) => Promise<void>,
   sessionsDir?: string
 ): void {
-  const config = readConfig();
-  if (config.extractIntervalMinutes === 0) return;
-
-  timer = setInterval(async () => {
-    try {
-      const cfg = readConfig();
-      const chunks = scanNewSessionMessages(cfg.lastExtractTime, sessionsDir);
-      if (chunks.length > 0) {
-        await onExtract(chunks);
-        updateLastExtractTime();
-      }
-    } catch (err) {
-      console.warn('[KB] Extract timer error:', err);
-    }
-  }, config.extractIntervalMinutes * 60 * 1000);
+  storedOnExtract = onExtract;
+  storedSessionsDir = sessionsDir;
+  scheduleExtract();
 }
 
-export function restartExtractTimer(
-  onExtract: (chunks: ConversationChunk[]) => Promise<void>,
-  sessionsDir?: string
-): void {
-  stopExtractTimer();
-  startExtractTimer(onExtract, sessionsDir);
+/**
+ * 重新调度提取定时器（配置更新时调用，无需再传回调）。
+ */
+export function restartExtractTimer(): void {
+  if (!storedOnExtract) return;
+  scheduleExtract();
 }
 
 export function stopExtractTimer(): void {
   if (timer) {
     clearInterval(timer);
     timer = null;
+  }
+  if (delayTimer) {
+    clearTimeout(delayTimer);
+    delayTimer = null;
   }
 }
 

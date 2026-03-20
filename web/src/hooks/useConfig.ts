@@ -6,11 +6,10 @@ const DEFAULT_CONFIG: KBConfigResponse = {
   extractIntervalMinutes: 30,
   lastExtractTime: new Date(0).toISOString(),
   maxNegativeSamples: 50,
-  categories: ["programming", "systems-design", "academic", "general"],
+  categories: ["ai", "academic", "general"],
   categoryColors: {
-    programming: "green",
-    "systems-design": "blue",
-    academic: "yellow",
+    ai: "green",
+    academic: "blue",
     general: "gray",
   },
 };

@@ -42,17 +42,17 @@ const SKILL_EDITABLE_REGIONS: Record<string, {
 }> = {
   'kb-active-capture': {
     startMarker: '## 步骤一：基础过滤',
-    endMarker: '## 步骤三：生成 JSON',
-    editableLabel: '知识筛选规则',
+    endMarker: '## 步骤三：去重检查',
+    editableLabel: '知识筛选与提取规则',
     headerLabel: '触发场景与任务目标',
-    footerLabel: '归档格式与入库流程',
+    footerLabel: '去重 · 校验 · 入库流程',
   },
   'kb-file-import': {
     startMarker: '## 提取规则',
-    endMarker: '## 步骤一：提取并将结果转为',
+    endMarker: '## 去重检查',
     editableLabel: '提取策略与筛选规则',
     headerLabel: '触发场景与任务目标',
-    footerLabel: '归档格式与入库流程',
+    footerLabel: '去重 · 校验 · 入库流程',
   },
   'kb-feynman-review': {
     startMarker: '## 导师角色',

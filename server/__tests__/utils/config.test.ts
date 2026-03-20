@@ -21,13 +21,13 @@ describe('Config Management', () => {
   it('should return default config if not exists', () => {
     const config = readConfig();
     expect(config.extractIntervalMinutes).toBe(30);
-    expect(config.categories).toContain('programming');
+    expect(config.categories).toContain('ai');
   });
 
   it('should support categoryColors in default config', () => {
     const config = readConfig();
     expect(config.categoryColors).toBeDefined();
-    expect(config.categoryColors).toHaveProperty('programming');
+    expect(config.categoryColors).toHaveProperty('ai');
   });
 
   it('should read after write consistent config', () => {
@@ -37,6 +37,7 @@ describe('Config Management', () => {
       maxNegativeSamples: 100,
       categories: ['test'],
       categoryColors: { test: 'red' },
+      extractHistory: [],
     };
     writeConfig(customConfig);
     const read = readConfig();
@@ -65,6 +66,7 @@ describe('Config Management', () => {
       maxNegativeSamples: 50,
       categories: ['custom-a', 'custom-b'],
       categoryColors: { 'custom-a': 'red', 'custom-b': 'blue' },
+      extractHistory: [],
     };
     writeConfig(customConfig);
     const categories = getCategories();
@@ -73,7 +75,7 @@ describe('Config Management', () => {
 
   it('getDefaultConfig returns full default config', () => {
     const def = getDefaultConfig();
-    expect(def.categories).toContain('programming');
-    expect(def.categoryColors).toHaveProperty('programming');
+    expect(def.categories).toContain('ai');
+    expect(def.categoryColors).toHaveProperty('ai');
   });
 });

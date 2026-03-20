@@ -38,8 +38,8 @@ describe('Config Route', () => {
       extractIntervalMinutes: 30,
       lastExtractTime: new Date(0).toISOString(),
       maxNegativeSamples: 50,
-      categories: ['programming'],
-      categoryColors: { programming: 'green' },
+      categories: ['ai'],
+      categoryColors: { ai: 'green' },
     }));
 
     const handler = createConfigHandler();
@@ -47,7 +47,7 @@ describe('Config Route', () => {
     await handler(req, res);
 
     const data = getData();
-    expect(data.categories).toContain('programming');
+    expect(data.categories).toContain('ai');
     expect(data.extractIntervalMinutes).toBe(30);
   });
 

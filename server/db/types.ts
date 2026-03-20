@@ -89,12 +89,18 @@ export interface StatsSummary {
   newToday: number;
 }
 
+export interface ExtractHistoryEntry {
+  time: string;
+  count: number;
+}
+
 export interface KBConfig {
   extractIntervalMinutes: number;
   lastExtractTime: string;
   maxNegativeSamples: number;
   categories: string[];
   categoryColors: Record<string, string>;
+  extractHistory: ExtractHistoryEntry[];
 }
 
 export interface NegativeSample {

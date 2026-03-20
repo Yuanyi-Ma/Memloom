@@ -121,3 +121,8 @@ export interface SkillMeta {
   description: string;
   sections: SkillSection[];
 }
+
+export interface ExtractHistoryItem {
+  time: string;
+  count: number;
+}

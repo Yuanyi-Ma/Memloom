@@ -110,7 +110,7 @@ describe('Config Route - 边界条件补充', () => {
     const { req, res, getStatus, getData } = mockReqRes('GET', '/api/config');
     await handler(req, res);
     expect(getStatus()).toBe(200);
-    expect(getData().categories).toContain('programming');
+    expect(getData().categories).toContain('ai');
     expect(getData().extractIntervalMinutes).toBe(30);
   });
 

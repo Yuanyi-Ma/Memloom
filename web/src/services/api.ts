@@ -4,6 +4,7 @@ import type {
   ReviewQueue, ImportResult, StatsSummary,
   ReviewStartParams, FileContent, CardFilters,
   KBConfigResponse, CategoriesResponse, SkillMeta,
+  ExtractHistoryItem,
 } from "../types/index";
 
 export { ApiError } from "../types/index";
@@ -95,5 +96,9 @@ export const api = {
       method: "PUT",
       body: JSON.stringify({ editableContent }),
     }),
+
+  // Extract History API
+  getExtractHistory: () =>
+    request<ExtractHistoryItem[]>("/config/extract-history"),
 };
 

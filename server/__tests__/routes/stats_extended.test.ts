@@ -47,8 +47,8 @@ describe('Stats Route - 边界条件补充', () => {
   });
 
   it('正确区分 mastered 和非 mastered', async () => {
-    insertCard(db, { id: 'kb-st01', title: 'A', category: 'programming', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
-    insertCard(db, { id: 'kb-st02', title: 'B', category: 'programming', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
+    insertCard(db, { id: 'kb-st01', title: 'A', category: 'ai', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
+    insertCard(db, { id: 'kb-st02', title: 'B', category: 'ai', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
     db.prepare('UPDATE card_schedule SET consecutive_correct = ? WHERE card_id = ?').run(3, 'kb-st01');
     db.prepare('UPDATE card_schedule SET consecutive_correct = ? WHERE card_id = ?').run(1, 'kb-st02');
 
@@ -59,7 +59,7 @@ describe('Stats Route - 边界条件补充', () => {
   });
 
   it('删除的卡片不计入统计', async () => {
-    insertCard(db, { id: 'kb-st03', title: 'Del', category: 'programming', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
+    insertCard(db, { id: 'kb-st03', title: 'Del', category: 'ai', tags: [], brief: 'b', detail: 'd', feynman_seed: 's' });
     db.prepare('UPDATE cards SET status = ? WHERE id = ?').run('deleted', 'kb-st03');
 
     const res = makeRes();
@@ -68,7 +68,7 @@ describe('Stats Route - 边界条件补充', () => {
   });
 
   it('pending 卡片不计入 active 统计', async () => {
-    insertCard(db, { id: 'kb-st04', title: 'Pending', category: 'programming', tags: [], brief: 'b', detail: 'd', feynman_seed: 's', status: 'pending' });
+    insertCard(db, { id: 'kb-st04', title: 'Pending', category: 'ai', tags: [], brief: 'b', detail: 'd', feynman_seed: 's', status: 'pending' });
 
     const res = makeRes();
     await handler(makeReq({}), res);

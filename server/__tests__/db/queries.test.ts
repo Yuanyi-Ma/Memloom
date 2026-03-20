@@ -19,7 +19,7 @@ describe('Database Queries - Core', () => {
     const cardInput: CardInput = {
       id: 'kb-20260304-0001',
       title: 'Test Card',
-      category: 'programming',
+      category: 'ai',
       tags: ['test'],
       brief: 'test brief',
       detail: 'test detail',
@@ -57,7 +57,7 @@ describe('Database Queries - Core', () => {
     const card1: CardInput = {
       id: 'kb-20260304-0003',
       title: 'Programming Card',
-      category: 'programming',
+      category: 'ai',
       tags: ['js'],
       brief: 'js brief',
       detail: 'detail',
@@ -66,7 +66,7 @@ describe('Database Queries - Core', () => {
     const card2: CardInput = {
       id: 'kb-20260304-0004',
       title: 'Academic Card',
-      category: 'academic',
+      category: 'blockchain',
       tags: ['math'],
       brief: 'math brief',
       detail: 'detail',
@@ -77,7 +77,7 @@ describe('Database Queries - Core', () => {
     insertCard(db, card2);
 
     // Filter by category
-    const progCards = queryCards(db, { category: 'programming' });
+    const progCards = queryCards(db, { category: 'ai' });
     expect(progCards.length).toBe(1);
     expect(progCards[0].title).toBe('Programming Card');
 
@@ -112,7 +112,7 @@ import { ScheduleUpdate, ReviewRecord, NegativeFeedbackInput } from '../../db/ty
 
 function makeCard(id: string): CardInput {
   return {
-    id, title: 'Test Card', category: 'programming',
+    id, title: 'Test Card', category: 'ai',
     tags: ['test'], brief: 'brief', detail: 'detail', feynman_seed: 'seed',
   };
 }

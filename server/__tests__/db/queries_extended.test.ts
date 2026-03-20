@@ -6,7 +6,7 @@ import { CardInput } from '../../db/types';
 
 function makeCard(id: string, overrides?: Partial<CardInput>): CardInput {
   return {
-    id, title: 'Test Card', category: 'programming',
+    id, title: 'Test Card', category: 'ai',
     tags: ['test'], brief: '简要描述内容', detail: '详细内容', feynman_seed: '复习问题',
     ...overrides,
   };
@@ -223,10 +223,10 @@ describe('updateCardCategory', () => {
   afterEach(() => { db.close(); });
 
   it('正常更新分类', () => {
-    insertCard(db, makeCard('kb-cat01', { category: 'programming' }));
-    updateCardCategory(db, 'kb-cat01', 'academic');
+    insertCard(db, makeCard('kb-cat01', { category: 'ai' }));
+    updateCardCategory(db, 'kb-cat01', 'blockchain');
     const card = getCardById(db, 'kb-cat01');
-    expect(card!.category).toBe('academic');
+    expect(card!.category).toBe('blockchain');
   });
 
   it('无效分类抛出错误', () => {
@@ -238,7 +238,7 @@ describe('updateCardCategory', () => {
     insertCard(db, makeCard('kb-cat03'));
     const before = getCardById(db, 'kb-cat03')!.created_at;
     // 稍等一下确保时间不同
-    updateCardCategory(db, 'kb-cat03', 'academic');
+    updateCardCategory(db, 'kb-cat03', 'blockchain');
     const card = getCardById(db, 'kb-cat03');
     // updated_at 应该已更新（可能与 created_at 不同）
     expect(card).not.toBeNull();

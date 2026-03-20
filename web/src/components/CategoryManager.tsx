@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Group, Badge, ActionIcon, TextInput, Button, Stack,
-  ColorSwatch, Popover, SimpleGrid, Text,
+  ColorSwatch, Popover, SimpleGrid, Text, Box,
 } from "@mantine/core";
 
 const PRESET_COLORS = [
@@ -18,6 +18,9 @@ interface CategoryManagerProps {
 export function CategoryManager({ categories, categoryColors, onChange }: CategoryManagerProps) {
   const [newCat, setNewCat] = useState("");
   const [colorPickerFor, setColorPickerFor] = useState<string | null>(null);
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
+  const dragCounter = useRef(0);
 
   function toSlug(name: string): string {
     return name.trim().toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9\u4e00-\u9fff-]/g, "");
@@ -48,11 +51,88 @@ export function CategoryManager({ categories, categoryColors, onChange }: Catego
     setColorPickerFor(null);
   }
 
+  function handleDragStart(idx: number) {
+    setDragIdx(idx);
+  }
+
+  function handleDragEnter(idx: number) {
+    dragCounter.current++;
+    setDragOverIdx(idx);
+  }
+
+  function handleDragLeave() {
+    dragCounter.current--;
+    if (dragCounter.current <= 0) {
+      setDragOverIdx(null);
+      dragCounter.current = 0;
+    }
+  }
+
+  function handleDrop(targetIdx: number) {
+    if (dragIdx === null || dragIdx === targetIdx) {
+      setDragIdx(null);
+      setDragOverIdx(null);
+      dragCounter.current = 0;
+      return;
+    }
+    const reordered = [...categories];
+    const [moved] = reordered.splice(dragIdx, 1);
+    reordered.splice(targetIdx, 0, moved);
+    onChange(reordered, categoryColors);
+    setDragIdx(null);
+    setDragOverIdx(null);
+    dragCounter.current = 0;
+  }
+
+  function handleDragEnd() {
+    setDragIdx(null);
+    setDragOverIdx(null);
+    dragCounter.current = 0;
+  }
+
   return (
-    <Stack gap="sm">
-      <Group gap="xs" wrap="wrap">
-        {categories.map(cat => (
-          <Group key={cat} gap={4} wrap="nowrap">
+    <Stack gap="md">
+      <Group gap={6} style={{
+        padding: '8px 12px',
+        borderRadius: 8,
+        background: 'rgba(59,130,246,0.06)',
+        border: '1px solid rgba(59,130,246,0.12)',
+      }}>
+        <Text fz="sm" style={{ opacity: 0.7 }}>↕️</Text>
+        <Text fz="xs" c="dimmed" lh={1.5}>
+          拖拽调整顺序 · 排在前面的分类将被优先匹配
+        </Text>
+      </Group>
+
+      <Box style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        {categories.map((cat, idx) => (
+          <Box
+            key={cat}
+            draggable
+            onDragStart={() => handleDragStart(idx)}
+            onDragEnter={() => handleDragEnter(idx)}
+            onDragLeave={handleDragLeave}
+            onDragOver={e => e.preventDefault()}
+            onDrop={() => handleDrop(idx)}
+            onDragEnd={handleDragEnd}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              cursor: 'grab',
+              opacity: dragIdx === idx ? 0.4 : 1,
+              transform: dragOverIdx === idx && dragIdx !== idx ? 'scale(1.05)' : 'none',
+              transition: 'transform 0.15s ease, opacity 0.15s ease',
+              borderRadius: 6,
+              padding: '2px 4px',
+              outline: dragOverIdx === idx && dragIdx !== idx
+                ? '2px solid rgba(59,130,246,0.5)'
+                : '2px solid transparent',
+            }}
+          >
+            <Text fz="xs" c="dimmed" fw={600} style={{ minWidth: 14, textAlign: 'center', userSelect: 'none' }}>
+              {idx + 1}
+            </Text>
             <Popover
               opened={colorPickerFor === cat}
               onClose={() => setColorPickerFor(null)}
@@ -98,9 +178,9 @@ export function CategoryManager({ categories, categoryColors, onChange }: Catego
             >
               {cat}
             </Badge>
-          </Group>
+          </Box>
         ))}
-      </Group>
+      </Box>
 
       <Group gap="xs">
         <TextInput

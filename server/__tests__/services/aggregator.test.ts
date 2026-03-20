@@ -24,10 +24,10 @@ describe('Aggregator - buildReviewQueue', () => {
 
   it('单分类内按优先级排序: 不会 > 模糊 > 首次 > 会', () => {
     const cards: DueCard[] = [
-      card('c1', 'programming', '会', 5),
-      card('c2', 'programming', null, 0),       // 首次
-      card('c3', 'programming', '不会', 3),
-      card('c4', 'programming', '模糊', 2),
+      card('c1', 'ai', '会', 5),
+      card('c2', 'ai', null, 0),       // 首次
+      card('c3', 'ai', '不会', 3),
+      card('c4', 'ai', '模糊', 2),
     ];
     const queue = buildReviewQueue(cards);
     expect(queue).toEqual(['c3', 'c4', 'c2', 'c1']);
@@ -37,10 +37,10 @@ describe('Aggregator - buildReviewQueue', () => {
     // A 组 6 张、B 组 3 张
     const cards: DueCard[] = [
       ...Array.from({ length: 6 }, (_, i) =>
-        card(`a${i}`, 'programming', '不会', 1)
+        card(`a${i}`, 'ai', '不会', 1)
       ),
       ...Array.from({ length: 3 }, (_, i) =>
-        card(`b${i}`, 'academic', '不会', 1)
+        card(`b${i}`, 'blockchain', '不会', 1)
       ),
     ];
     const queue = buildReviewQueue(cards, 20);
@@ -72,9 +72,9 @@ describe('Aggregator - buildReviewQueue', () => {
 
   it('所有卡片同一分类 → 直接按优先级输出', () => {
     const cards: DueCard[] = [
-      card('c1', 'academic', '会', 5),
-      card('c2', 'academic', '不会', 2),
-      card('c3', 'academic', null, 0),
+      card('c1', 'blockchain', '会', 5),
+      card('c2', 'blockchain', '不会', 2),
+      card('c3', 'blockchain', null, 0),
     ];
     const queue = buildReviewQueue(cards);
     expect(queue).toEqual(['c2', 'c3', 'c1']);
@@ -82,10 +82,10 @@ describe('Aggregator - buildReviewQueue', () => {
 
   it('3 分类各 2 张，maxCount=5 → 贪心取法', () => {
     const cards: DueCard[] = [
-      card('a1', 'programming', '不会', 1),
-      card('a2', 'programming', '会', 5),
-      card('b1', 'academic', '模糊', 2),
-      card('b2', 'academic', null, 0),
+      card('a1', 'ai', '不会', 1),
+      card('a2', 'ai', '会', 5),
+      card('b1', 'blockchain', '模糊', 2),
+      card('b2', 'blockchain', null, 0),
       card('c1', 'general', '不会', 1),
       card('c2', 'general', '会', 3),
     ];

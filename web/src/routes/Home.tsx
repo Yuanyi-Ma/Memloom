@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Container, Title, Box, ActionIcon, Group, Card, Text, Button, Badge, ThemeIcon, Flex, Stack, RingProgress, Center } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
 import { useStats } from "../hooks/useStats";
+import { useConfig } from "../hooks/useConfig";
 import { EmptyState } from "../components/EmptyState";
 import { ImportModal } from "../components/ImportModal";
 import { showToast } from "../components/Toast";
@@ -11,9 +12,20 @@ import "./Home.css";
 
 export default function Home() {
   const { stats, history, loading } = useStats();
+  const { config, saving, saveConfig } = useConfig();
   const [showImport, setShowImport] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [onboardCats, setOnboardCats] = useState<string[]>([]);
+  const [onboardColors, setOnboardColors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+
+  // 从配置初始化引导页的分类状态
+  useEffect(() => {
+    if (config) {
+      setOnboardCats(config.categories);
+      setOnboardColors(config.categoryColors);
+    }
+  }, [config]);
 
   useEffect(() => {
     api.getCards({ status: 'pending' })
@@ -57,7 +69,14 @@ export default function Home() {
       </Group>
 
       {isEmpty && pendingCount === 0 ? (
-        <EmptyState onImportClick={() => setShowImport(true)} />
+        <EmptyState
+          onImportClick={() => setShowImport(true)}
+          categories={onboardCats}
+          categoryColors={onboardColors}
+          onCategoriesChange={(cats, colors) => { setOnboardCats(cats); setOnboardColors(colors); }}
+          onSave={() => saveConfig({ categories: onboardCats, categoryColors: onboardColors })}
+          saving={saving}
+        />
       ) : (
         <div className="bento-grid">
           {/* 大核心：复习卡片 (Hero Widget) */}

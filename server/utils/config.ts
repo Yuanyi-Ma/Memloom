@@ -4,9 +4,8 @@ import os from 'os';
 import { KBConfig } from '../db/types.js';
 
 const DEFAULT_CATEGORY_COLORS: Record<string, string> = {
-  'programming': 'green',
-  'systems-design': 'blue',
-  'academic': 'yellow',
+  'ai': 'green',
+  'academic': 'blue',
   'general': 'gray',
 };
 
@@ -14,8 +13,9 @@ const DEFAULT_CONFIG: KBConfig = {
   extractIntervalMinutes: 30,
   lastExtractTime: new Date(0).toISOString(),
   maxNegativeSamples: 50,
-  categories: ['programming', 'systems-design', 'academic', 'general'],
+  categories: ['ai', 'academic', 'general'],
   categoryColors: DEFAULT_CATEGORY_COLORS,
+  extractHistory: [],
 };
 
 function getConfigPath(): string {
@@ -53,6 +53,20 @@ export function updateLastExtractTime(time?: string): void {
   const currentConfig = readConfig();
   currentConfig.lastExtractTime = time || new Date().toISOString();
   writeConfig(currentConfig);
+}
+
+const MAX_EXTRACT_HISTORY = 50;
+
+export function appendExtractHistory(count: number): void {
+  const config = readConfig();
+  const history = config.extractHistory || [];
+  history.push({ time: new Date().toISOString(), count });
+  // 保留最近 MAX_EXTRACT_HISTORY 条
+  if (history.length > MAX_EXTRACT_HISTORY) {
+    history.splice(0, history.length - MAX_EXTRACT_HISTORY);
+  }
+  config.extractHistory = history;
+  writeConfig(config);
 }
 
 /** 便捷函数：获取当前配置的分类列表 */

@@ -29,7 +29,7 @@ function makeRes(): HttpResponse & { _status: number; _body: any } {
 
 function makeCard(id: string): CardInput {
   return {
-    id, title: 'Test', category: 'programming',
+    id, title: 'Test', category: 'ai',
     tags: ['test'], brief: 'Brief', detail: 'Detail',
     feynman_seed: 'Question',
   };
@@ -76,7 +76,7 @@ describe('Cards Route Handler', () => {
   });
 
   it('POST /api/cards/ingest ingests cards', async () => {
-    const body = { cards: [{ title: 'T1', category: 'programming', tags: ['a'], brief: 'B', detail: 'D', review_question: 'Q' }] };
+    const body = { cards: [{ title: 'T1', category: 'ai', tags: ['a'], brief: 'B', detail: 'D', review_question: 'Q' }] };
     const res = makeRes();
     await handler(makeReq({ method: 'POST', url: '/api/cards/ingest', body }), res);
     expect(res._status).toBe(200);
@@ -162,7 +162,7 @@ describe('PATCH /api/cards/:id/status', () => {
     db = initDatabase(':memory:');
     handler = createCardsHandler(db);
     insertCard(db, {
-      id: 'kb-stat', title: 'Test', category: 'programming', tags: [],
+      id: 'kb-stat', title: 'Test', category: 'ai', tags: [],
       brief: 'Brief', detail: 'Detail', feynman_seed: 'Seed', status: 'pending'
     });
   });

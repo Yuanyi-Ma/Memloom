@@ -22,7 +22,7 @@ describe('Config Management - 边界条件补充', () => {
     fs.writeFileSync(configPath, 'this is not valid json {{{');
     const config = readConfig();
     expect(config.extractIntervalMinutes).toBe(30);
-    expect(config.categories).toContain('programming');
+    expect(config.categories).toContain('ai');
   });
 
   it('updateLastExtractTime 不传参使用当前时间', () => {
@@ -41,7 +41,7 @@ describe('Config Management - 边界条件补充', () => {
     const config = readConfig();
     expect(config.extractIntervalMinutes).toBe(99);
     // 未指定的字段应使用默认值
-    expect(config.categories).toContain('programming');
+    expect(config.categories).toContain('ai');
     expect(config.maxNegativeSamples).toBe(50);
   });
 
@@ -71,9 +71,9 @@ describe('Config Management - 边界条件补充', () => {
 
   it('readConfig 的 categoryColors 默认包含所有默认分类', () => {
     const config = readConfig();
-    expect(config.categoryColors).toHaveProperty('programming');
-    expect(config.categoryColors).toHaveProperty('systems-design');
-    expect(config.categoryColors).toHaveProperty('academic');
+    expect(config.categoryColors).toHaveProperty('ai');
+    expect(config.categoryColors).toHaveProperty('computer-science');
+    expect(config.categoryColors).toHaveProperty('blockchain');
     expect(config.categoryColors).toHaveProperty('general');
   });
 });

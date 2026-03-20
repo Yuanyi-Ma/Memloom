@@ -6,11 +6,12 @@ import {
   Textarea, Paper, ActionIcon, ScrollArea,
 } from "@mantine/core";
 import { useNavigate } from "react-router-dom";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useConfig } from "../hooks/useConfig";
 import { CategoryManager } from "../components/CategoryManager";
 import { Toast } from "../components/Toast";
 import { api } from "../services/api";
-import type { SkillMeta, SkillSection } from "../types/index";
+import type { SkillMeta, SkillSection, ExtractHistoryItem } from "../types/index";
 import "./Settings.css";
 
 const INTERVAL_OPTIONS = [
@@ -57,6 +58,9 @@ export default function Settings() {
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [resetConfirm, setResetConfirm] = useState(false);
 
+  // Extract history for chart
+  const [extractHistory, setExtractHistory] = useState<ExtractHistoryItem[]>([]);
+
   useEffect(() => {
     if (config) {
       setForm({
@@ -71,6 +75,9 @@ export default function Settings() {
   useEffect(() => {
     api.getSkills()
       .then(data => setSkills(data.skills))
+      .catch(() => {});
+    api.getExtractHistory()
+      .then(data => setExtractHistory(data))
       .catch(() => {});
   }, []);
 
@@ -261,13 +268,96 @@ export default function Settings() {
                 onChange={v => setForm(f => ({ ...f, extractIntervalMinutes: Number(v) }))}
                 size="md"
               />
+
+              {/* 提取历史折线图 */}
+              <Box className="extract-chart-wrapper">
+                <Group justify="space-between" align="center" mb="md">
+                  <Text fw={600} size="lg">提取历史</Text>
+                  <Badge variant="dot" color="cyan">最近 {extractHistory.length} 次</Badge>
+                </Group>
+                {extractHistory.length > 0 ? (
+                  <Box h={240}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={extractHistory} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="extractGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.5} />
+                            <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                        <XAxis
+                          dataKey="time"
+                          tickFormatter={(val: string) => {
+                            const d = new Date(val);
+                            return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+                          }}
+                          stroke="#9CA3AF"
+                          tick={{ fontSize: 11, fill: '#9CA3AF' }}
+                          axisLine={false}
+                          tickLine={false}
+                          interval="preserveStartEnd"
+                        />
+                        <YAxis
+                          stroke="#9CA3AF"
+                          tick={{ fontSize: 12, fill: '#9CA3AF' }}
+                          axisLine={false}
+                          tickLine={false}
+                          allowDecimals={false}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                            borderColor: 'rgba(6, 182, 212, 0.3)',
+                            borderRadius: '12px',
+                            backdropFilter: 'blur(12px)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                          }}
+                          labelFormatter={(val) => {
+                            const d = new Date(String(val));
+                            return d.toLocaleString('zh-CN');
+                          }}
+                          formatter={(value) => [`${value} 条对话`, '扫描到的新对话']}
+                          itemStyle={{ color: '#06b6d4', fontWeight: 600 }}
+                        />
+                        <Area
+                          type="monotone"
+                          dataKey="count"
+                          stroke="url(#extractStroke)"
+                          strokeWidth={2.5}
+                          fillOpacity={1}
+                          fill="url(#extractGradient)"
+                          dot={{ r: 3, fill: '#06b6d4', strokeWidth: 0 }}
+                          activeDot={{ r: 5, fill: '#06b6d4', stroke: 'rgba(6,182,212,0.4)', strokeWidth: 4 }}
+                        />
+                        <defs>
+                          <linearGradient id="extractStroke" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0%" stopColor="#06b6d4" />
+                            <stop offset="100%" stopColor="#8b5cf6" />
+                          </linearGradient>
+                        </defs>
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </Box>
+                ) : (
+                  <Center h={180}>
+                    <Stack align="center" gap="xs">
+                      <Text fz={32}>📊</Text>
+                      <Text c="dimmed" size="sm">暂无提取记录，等待定时器运行后将在此展示趋势</Text>
+                    </Stack>
+                  </Center>
+                )}
+              </Box>
             </Stack>
           )}
 
           {activeSection === 'categories' && (
             <Stack gap="xl">
-              <Text fw={600} size="xl">分类标签管理</Text>
-              <Text c="dimmed" size="sm" mb="md">为提取的知识卡片定义颜色标记。</Text>
+              <Box>
+                <Text fw={600} size="xl" mb={4}>分类标签管理</Text>
+                <Text c="dimmed" size="sm">定义知识卡片的分类标签，排列顺序即为分类优先级。</Text>
+              </Box>
               <CategoryManager
                 categories={form.categories}
                 categoryColors={form.categoryColors}
@@ -280,7 +370,7 @@ export default function Settings() {
 
           {activeSection === 'storage' && (
             <Stack gap="xl">
-              <Text fw={600} size="xl">数据库调优</Text>
+              <Text fw={600} size="xl">本地数据库配置</Text>
               <TextInput
                 label="本地数据库路径"
                 value="~/.memloom/"
