@@ -16,6 +16,7 @@ const DEFAULT_CONFIG: KBConfig = {
   categories: ['ai', 'academic', 'general'],
   categoryColors: DEFAULT_CATEGORY_COLORS,
   extractHistory: [],
+  initialized: false,
 };
 
 function getConfigPath(): string {

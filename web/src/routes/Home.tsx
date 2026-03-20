@@ -17,13 +17,15 @@ export default function Home() {
   const [pendingCount, setPendingCount] = useState(0);
   const [onboardCats, setOnboardCats] = useState<string[]>([]);
   const [onboardColors, setOnboardColors] = useState<Record<string, string>>({});
+  const [showOnboarding, setShowOnboarding] = useState<boolean | null>(null); // null = loading
   const navigate = useNavigate();
 
-  // 从配置初始化引导页的分类状态
+  // 从配置初始化引导页的分类状态 & 判断是否需要引导
   useEffect(() => {
     if (config) {
       setOnboardCats(config.categories);
       setOnboardColors(config.categoryColors);
+      setShowOnboarding(!config.initialized);
     }
   }, [config]);
 
@@ -33,7 +35,16 @@ export default function Home() {
       .catch(() => setPendingCount(0));
   }, []);
 
-  if (loading || !stats) {
+  async function handleOnboardSave() {
+    const ok = await saveConfig({
+      categories: onboardCats,
+      categoryColors: onboardColors,
+      initialized: true,
+    });
+    if (ok) setShowOnboarding(false);
+  }
+
+  if (loading || !stats || showOnboarding === null) {
     return (
       <Container size="lg" py="xl">
         <Center h={400}>
@@ -42,8 +53,6 @@ export default function Home() {
       </Container>
     );
   }
-
-  const isEmpty = stats.totalCards === 0;
 
   return (
     <Container size="xl" py="xl" className="home-container">
@@ -68,13 +77,13 @@ export default function Home() {
         </ActionIcon>
       </Group>
 
-      {isEmpty && pendingCount === 0 ? (
+      {showOnboarding ? (
         <EmptyState
           onImportClick={() => setShowImport(true)}
           categories={onboardCats}
           categoryColors={onboardColors}
           onCategoriesChange={(cats, colors) => { setOnboardCats(cats); setOnboardColors(colors); }}
-          onSave={() => saveConfig({ categories: onboardCats, categoryColors: onboardColors })}
+          onSave={handleOnboardSave}
           saving={saving}
         />
       ) : (

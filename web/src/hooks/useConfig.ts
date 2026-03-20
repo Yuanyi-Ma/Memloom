@@ -12,6 +12,7 @@ const DEFAULT_CONFIG: KBConfigResponse = {
     academic: "blue",
     general: "gray",
   },
+  initialized: false,
 };
 
 export function useConfig() {

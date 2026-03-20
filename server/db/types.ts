@@ -101,6 +101,7 @@ export interface KBConfig {
   categories: string[];
   categoryColors: Record<string, string>;
   extractHistory: ExtractHistoryEntry[];
+  initialized: boolean;
 }
 
 export interface NegativeSample {

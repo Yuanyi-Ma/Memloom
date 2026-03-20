@@ -102,6 +102,7 @@ export interface KBConfigResponse {
   maxNegativeSamples: number;
   categories: string[];
   categoryColors: Record<string, string>;
+  initialized: boolean;
 }
 
 export interface CategoriesResponse {
