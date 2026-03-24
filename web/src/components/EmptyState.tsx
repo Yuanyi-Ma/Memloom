@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Stack, Text, Button, Center, Box, Title, Group, Badge } from "@mantine/core";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CategoryManager } from "./CategoryManager";
 
 interface EmptyStateProps {
@@ -28,25 +29,15 @@ export function EmptyState({
   }
 
   return (
-    <Center mih="70vh">
-      <Box
-        className="glass-card"
-        style={{
-          maxWidth: 560,
-          width: '100%',
-          padding: '48px 36px',
-          textAlign: 'center',
-        }}
-      >
-        <Stack align="center" gap="lg">
+    <div className="flex items-center justify-center min-h-[70vh]">
+      <div className="glass-card max-w-[560px] w-full px-9 py-12 text-center">
+        <div className="flex flex-col items-center gap-6">
           {/* Logo & Welcome */}
           <img
             src="/images/logo_bird.png"
             alt="Memloom"
+            className="w-[120px] h-[120px] object-cover"
             style={{
-              width: 120,
-              height: 120,
-              objectFit: 'cover',
               mixBlendMode: 'lighten',
               WebkitMaskImage: 'radial-gradient(circle at center, black 35%, transparent 70%)',
               maskImage: 'radial-gradient(circle at center, black 35%, transparent 70%)',
@@ -55,82 +46,54 @@ export function EmptyState({
             }}
           />
 
-          <Box>
-            <Title
-              order={2}
-              mb={4}
-              style={{
-                background: '-webkit-linear-gradient(45deg, #fff, #94a3b8)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                letterSpacing: '-0.5px',
-              }}
-            >
+          <div>
+            <h2 className="text-2xl font-bold mb-1 bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent tracking-tight">
               欢迎使用忆织
-            </Title>
-            <Text c="dimmed" size="sm" lh={1.6}>
+            </h2>
+            <p className="text-muted-foreground text-sm leading-relaxed">
               在开始之前，先设定你的知识分类。<br />
               分类决定了 AI 如何组织你的知识——排在前面的优先级更高。
-            </Text>
-          </Box>
+            </p>
+          </div>
 
           {/* Category Setup */}
-          <Box
-            w="100%"
-            style={{
-              textAlign: 'left',
-              padding: '20px 16px',
-              borderRadius: 12,
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            <Group justify="space-between" align="center" mb="sm">
-              <Text fw={600} size="sm">知识分类</Text>
-              <Badge variant="dot" color="brand" size="sm">可拖拽排序</Badge>
-            </Group>
+          <div className="w-full text-left p-5 rounded-xl bg-foreground/[0.03] border border-foreground/[0.06]">
+            <div className="flex justify-between items-center mb-3">
+              <span className="font-semibold text-sm">知识分类</span>
+              <Badge variant="outline" className="text-primary border-primary/30 text-xs">可拖拽排序</Badge>
+            </div>
             <CategoryManager
               categories={categories}
               categoryColors={categoryColors}
               onChange={onCategoriesChange}
             />
-          </Box>
+          </div>
 
           {/* Actions */}
-          <Group gap="sm" w="100%">
+          <div className="flex gap-3 w-full">
             <Button
-              flex={1}
-              size="md"
-              radius="xl"
-              color="brand"
+              className="flex-1 rounded-full shadow-lg shadow-green-500/30 border border-green-500/50 bg-green-600 hover:bg-green-700 text-white"
+              size="lg"
               onClick={handleSave}
-              loading={saving}
-              style={{
-                boxShadow: saved ? '0 0 20px rgba(16,185,129,0.5)' : '0 0 12px rgba(16,185,129,0.3)',
-                border: '1px solid rgba(16,185,129,0.5)',
-                transition: 'box-shadow 0.3s ease',
-              }}
+              disabled={saving}
             >
               {saved ? '✅ 已保存' : '💾 保存分类设置'}
             </Button>
             <Button
-              flex={1}
-              size="md"
-              radius="xl"
-              variant="light"
-              color="violet"
+              className="flex-1 rounded-full"
+              variant="secondary"
+              size="lg"
               onClick={onImportClick}
             >
               📤 导入知识
             </Button>
-          </Group>
+          </div>
 
-          <Text fz="xs" c="dimmed" lh={1.5}>
+          <p className="text-xs text-muted-foreground leading-relaxed">
             你也可以直接在对话中积累知识，AI 会自动提取并归类。
-          </Text>
-        </Stack>
-      </Box>
-    </Center>
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

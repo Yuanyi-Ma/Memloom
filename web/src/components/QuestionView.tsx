@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Paper, Text, Stack } from "@mantine/core";
 
 export function QuestionView({ question, onShowAnswer }: { question: string; onShowAnswer: () => void }) {
   return (
@@ -11,21 +10,15 @@ export function QuestionView({ question, onShowAnswer }: { question: string; onS
       onClick={onShowAnswer}
       style={{ cursor: 'pointer' }}
     >
-        <Stack align="stretch" gap="xl" w="100%">
-          <Paper
-            p={40}
-            className="flashcard-3d"
-          >
-            <Text c="dimmed" size="sm" fw={600} mb="xs" tt="uppercase" style={{ letterSpacing: '1px' }}>TERM</Text>
-            <Text className="flashcard-term">
-              {question}
-            </Text>
-            
-            <Text className="flashcard-body-text" c="dimmed" mt="xl" style={{ opacity: 0.7 }}>
-              点击卡片任意位置查看答案
-            </Text>
-          </Paper>
-        </Stack>
+      <div className="flex flex-col items-stretch gap-6 w-full">
+        <div className="flashcard-3d p-10">
+          <p className="text-muted-foreground text-sm font-semibold mb-2 uppercase tracking-widest">TERM</p>
+          <p className="flashcard-term">{question}</p>
+          <p className="flashcard-body-text mt-8 text-primary/70 font-medium text-base tracking-wide">
+            👆 点击卡片任意位置查看答案
+          </p>
+        </div>
+      </div>
     </motion.div>
   );
 }

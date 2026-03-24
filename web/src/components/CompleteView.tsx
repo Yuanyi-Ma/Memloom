@@ -1,11 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { Button, Stack, Text, Center, Group, Box } from "@mantine/core";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import "./CompleteView.css";
 
 function CountUp({ end, duration = 800 }: { end: number; duration?: number }) {
   const [value, setValue] = useState(0);
-
   useEffect(() => {
     if (end === 0) { setValue(0); return; }
     let frameId: number;
@@ -19,7 +18,6 @@ function CountUp({ end, duration = 800 }: { end: number; duration?: number }) {
     frameId = requestAnimationFrame(step);
     return () => cancelAnimationFrame(frameId);
   }, [end, duration]);
-
   return <>{value}</>;
 }
 
@@ -28,10 +26,10 @@ function TechPanel({ label, value, color, delay }: { label: string; value: numbe
     <div className="tech-panel" style={{ '--acc-color': color, '--delay': `${delay}s` } as React.CSSProperties}>
       <div className="tech-panel-corner top-left"></div>
       <div className="tech-panel-corner bottom-right"></div>
-      <Text size="sm" fw={600} className="tech-label">{label}</Text>
-      <Text size="xl" fw={800} className="tech-value" style={{ textShadow: `0 0 10px ${color}` }}>
+      <p className="text-sm font-semibold tech-label">{label}</p>
+      <p className="text-xl font-extrabold tech-value" style={{ textShadow: `0 0 10px ${color}` }}>
         <CountUp end={value} duration={1200} />
-      </Text>
+      </p>
     </div>
   );
 }
@@ -40,7 +38,7 @@ export function CompleteView({ stats }: { stats: { 会: number; 模糊: number; 
   const navigate = useNavigate();
   const total = stats.会 + stats.模糊 + stats.不会;
   const masteryRate = total > 0 ? Math.round((stats.会 / total) * 100) : 0;
-  
+
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 100);
@@ -50,37 +48,36 @@ export function CompleteView({ stats }: { stats: { 会: number; 模糊: number; 
   return (
     <div className={`game-dashboard ${visible ? 'visible' : ''}`}>
       <div className="cyber-grid-bg"></div>
-      
-      <Center mih="70vh" style={{ position: 'relative', zIndex: 10 }}>
-        <Stack align="center" gap={0} w="100%" style={{ maxWidth: 600 }}>
-          
-          <Box className="header-stats" mb={40}>
+
+      <div className="flex items-center justify-center min-h-[70vh] relative z-10">
+        <div className="flex flex-col items-center gap-0 w-full max-w-[600px]">
+
+          <div className="header-stats mb-10">
             <div className="header-stat-box">
-              <Text size="xs" c="cyan.4">复习总数</Text>
-              <Text size="lg" fw={700} c="cyan.2"><CountUp end={total} /></Text>
+              <span className="text-xs text-cyan-400">复习总数</span>
+              <span className="text-lg font-bold text-cyan-200"><CountUp end={total} /></span>
             </div>
             <div className="header-divider"></div>
             <div className="header-stat-box">
-              <Text size="xs" c="cyan.4">掌握率</Text>
-              <Text size="lg" fw={700} c="cyan.2"><CountUp end={masteryRate} />%</Text>
+              <span className="text-xs text-cyan-400">掌握率</span>
+              <span className="text-lg font-bold text-cyan-200"><CountUp end={masteryRate} />%</span>
             </div>
-          </Box>
+          </div>
 
           <div className="mastery-ring-container">
             <div className="neon-ring outer"></div>
             <div className="neon-ring inner">
               <div className="spin-dash"></div>
             </div>
-            
+
             <div className="ring-content">
-              <Text size="sm" fw={600} style={{ letterSpacing: '2px', color: '#6ee7b7' }}>掌握度</Text>
-              <Text fw={900} className="mastery-pct">
+              <span className="text-sm font-semibold" style={{ letterSpacing: '2px', color: '#6ee7b7' }}>掌握度</span>
+              <span className="mastery-pct font-black">
                 <CountUp end={masteryRate} duration={1500} />
                 <span style={{ fontSize: '0.5em', opacity: 0.8 }}>%</span>
-              </Text>
+              </span>
             </div>
 
-            {/* Orbiting Panels */}
             {total > 0 && (
               <>
                 <div className="orbit-panel-wrapper pos-left">
@@ -96,18 +93,13 @@ export function CompleteView({ stats }: { stats: { 会: number; 模糊: number; 
             )}
           </div>
 
-          <Group mt={80} gap="md" w="100%" justify="center">
-            <Button
-              className="cyber-btn"
-              size="xl"
-              onClick={() => navigate("/")}
-            >
+          <div className="flex mt-20 gap-4 w-full justify-center">
+            <Button className="cyber-btn" size="lg" onClick={() => navigate("/")}>
               <span className="btn-glitch">继续探索</span>
             </Button>
-          </Group>
-          
-        </Stack>
-      </Center>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect } from 'vitest';
-import { MantineProvider } from '@mantine/core';
 import Home from './Home';
 
 // Mock dependencies
@@ -15,6 +14,16 @@ vi.mock('../hooks/useStats', () => ({
     },
     history: [{ date: '2023-11-01', count: 2 }],
     loading: false,
+  }),
+}));
+
+vi.mock('../hooks/useConfig', () => ({
+  useConfig: () => ({
+    config: { categories: ['test'], categoryColors: { test: 'blue' }, initialized: true },
+    loading: false,
+    saving: false,
+    saveConfig: vi.fn(),
+    fetchConfig: vi.fn(),
   }),
 }));
 
@@ -36,11 +45,9 @@ vi.mock('recharts', async (importOriginal) => {
 describe('Home Page Redesign', () => {
   const renderHome = () => {
     return render(
-      <MantineProvider>
-        <BrowserRouter>
-          <Home />
-        </BrowserRouter>
-      </MantineProvider>
+      <BrowserRouter>
+        <Home />
+      </BrowserRouter>
     );
   };
 
@@ -51,12 +58,8 @@ describe('Home Page Redesign', () => {
 
   it('contains bento-grid and glass-card styling classes', () => {
     const { container } = renderHome();
-    
-    // We expect the new design to use a Bento Box grid
     const bentoGrid = container.querySelector('.bento-grid');
     expect(bentoGrid).toBeInTheDocument();
-
-    // We expect to see modern glassmorphic cards instead of standard Mantine cards
     const glassCards = container.querySelectorAll('.glass-card');
     expect(glassCards.length).toBeGreaterThan(0);
   });

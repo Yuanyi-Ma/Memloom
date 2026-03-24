@@ -1,20 +1,11 @@
-import { TextInput } from "@mantine/core";
+import { Input } from "@/components/ui/input";
 
 export function SearchBar({ onSearch }: { onSearch: (keyword: string) => void }) {
   return (
-    <TextInput
-      size="md"
-      radius="md"
+    <Input
       placeholder="🔍 搜索知识卡片..."
       onChange={e => onSearch(e.target.value)}
-      mb="md"
-      styles={{
-        input: {
-          background: 'var(--color-bg-secondary)',
-          borderColor: 'var(--color-border)',
-          '&:focus': { borderColor: 'var(--mantine-color-brand-5)' },
-        },
-      }}
+      className="bg-secondary border-border focus-visible:ring-primary mb-4"
     />
   );
 }

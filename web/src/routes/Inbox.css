@@ -14,7 +14,7 @@
 }
 
 .spotlight-search {
-  background: rgba(30, 41, 59, 0.6) !important;
+  background: var(--card) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -38,7 +38,7 @@
 }
 
 .glass-filter-btn {
-  background: rgba(30, 41, 59, 0.4) !important;
+  background: var(--card) !important;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -101,7 +101,7 @@
 
 /* Glass Card styling (reused from Home, optionally expanded here) */
 .glass-card {
-  background: rgba(30, 41, 59, 0.4) !important;
+  background: var(--card) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08) !important;

@@ -1,13 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Paper, Textarea, ActionIcon, ScrollArea, Stack, Text, TypographyStylesProvider } from "@mantine/core";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../types/index";
+import { ArrowUp } from "lucide-react";
 
 export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initialQuestion?: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>(
     initialQuestion
-      ? [{ role: "assistant", content: `关于这个问题，你有什么想法吗？\n\n> **${initialQuestion}**\n\n你可以尝试用自己的话向我解释，如果不清楚，可以直接告诉我。` }]
+      ? [{ role: "assistant", content: `关于这个问题，你有什么想法吗？\n\n### ${initialQuestion}\n\n你可以尝试用自己的话向我解释，如果不清楚，可以直接告诉我。` }]
       : []
   );
   const [isStreaming, setIsStreaming] = useState(false);
@@ -15,7 +17,6 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
   const [input, setInput] = useState("");
   const viewport = useRef<HTMLDivElement>(null);
 
-  // 挂载时初始化 review session
   useEffect(() => {
     let cancelled = false;
     fetch("/api/review/chat", {
@@ -23,14 +24,11 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ cardId, action: "start" }),
     })
-      .then((res) => {
-        if (!cancelled && res.ok) setInitialized(true);
-      })
+      .then((res) => { if (!cancelled && res.ok) setInitialized(true); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [cardId]);
 
-  // 自动滚动到底部
   useEffect(() => {
     requestAnimationFrame(() => {
       if (viewport.current) {
@@ -41,12 +39,8 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
 
   const sendMessage = useCallback(async (userMessage: string) => {
     if (!initialized || isStreaming) return;
-
-    // 追加用户消息
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setIsStreaming(true);
-
-    // 追加空 AI 消息占位
     setMessages((prev) => [...prev, { role: "assistant", content: "思考中...", isStreaming: true }]);
 
     try {
@@ -55,7 +49,6 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ cardId, userMessage }),
       });
-
       if (!res.ok) {
         setMessages((prev) => prev.map((m, i) =>
           i === prev.length - 1 ? { ...m, content: "抱歉，对话服务暂时不可用。", isStreaming: false } : m
@@ -63,12 +56,11 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
         setIsStreaming(false);
         return;
       }
-
       const data = await res.json();
       setMessages((prev) => prev.map((m, i) =>
         i === prev.length - 1 ? { ...m, content: data.reply || "...", isStreaming: false } : m
       ));
-    } catch (err) {
+    } catch {
       setMessages((prev) => prev.map((m, i) =>
         i === prev.length - 1 ? { ...m, content: "网络错误，请稍后重试。", isStreaming: false } : m
       ));
@@ -84,43 +76,35 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
   };
 
   return (
-    <Stack gap={0} style={{ flex: 1, height: '100%', overflow: 'hidden' }}>
-      <ScrollArea flex={1} viewportRef={viewport} type="auto" offsetScrollbars p="md">
-        <Stack gap="md">
+    <div className="flex flex-col flex-1 h-full overflow-hidden">
+      <div ref={viewport} className="flex-1 overflow-y-auto p-4">
+        <div className="flex flex-col gap-4">
           {messages.map((m, i) => (
-            <Paper
+            <div
               key={i}
-              p="sm"
-              px="md"
-              radius="lg"
-              style={{
-                alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-                maxWidth: '80%',
-                background: m.role === 'user' ? 'var(--color-bg-tertiary)' : 'var(--color-bg-secondary)',
-                border: m.role === 'assistant' ? '1px solid var(--color-border)' : 'none',
-              }}
+              className={`rounded-3xl px-6 py-5 max-w-[85%] text-lg leading-relaxed shadow-sm ${
+                m.role === 'user'
+                  ? 'self-end bg-primary/20 text-foreground border border-primary/30'
+                  : 'self-start bg-card border border-border'
+              }`}
             >
-              <TypographyStylesProvider fz="sm">
+              <div className="prose-kb">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
-              </TypographyStylesProvider>
+              </div>
               {m.isStreaming && (
-                <Text span fz="sm" style={{ animation: 'blink 1s step-end infinite' }}>▍</Text>
+                <span className="text-sm" style={{ animation: 'blink 1s step-end infinite' }}>▍</span>
               )}
-            </Paper>
+            </div>
           ))}
-        </Stack>
-      </ScrollArea>
+        </div>
+      </div>
 
-      <div style={{ padding: 'var(--spacing-sm)', display: 'flex', gap: 'var(--spacing-sm)', borderTop: '1px solid var(--color-border)' }}>
+      <div className="flex gap-3 p-4 border-t border-border bg-background/50 backdrop-blur-md">
         <Textarea
-          flex={1}
-          size="md"
-          radius="md"
+          className="flex-1 bg-accent/50 border-border resize-none text-lg p-4 min-h-[64px] rounded-2xl focus-visible:ring-primary/50"
           placeholder="尝试用自己的话解释..."
           value={input}
-          autosize
-          minRows={1}
-          maxRows={8}
+          rows={2}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => {
             if (e.key === "Enter" && !e.shiftKey) {
@@ -129,24 +113,16 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
             }
           }}
           disabled={isStreaming}
-          styles={{
-            input: {
-              background: 'var(--color-bg-tertiary)',
-              borderColor: 'var(--color-border)',
-            },
-          }}
         />
-        <ActionIcon
-          variant="filled"
-          color="brand"
-          size="xl"
-          radius="md"
+        <Button
+          size="icon-lg"
+          className="h-16 w-16 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-md transition-all self-end"
           onClick={handleSend}
           disabled={isStreaming || !input.trim()}
         >
-          ↑
-        </ActionIcon>
+          <ArrowUp className="!size-7" strokeWidth={2.5} />
+        </Button>
       </div>
-    </Stack>
+    </div>
   );
 }

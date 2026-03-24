@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Paper, Group, Text, Badge, ActionIcon, Box, Progress } from "@mantine/core";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Trash2 } from "lucide-react";
 import type { CardSummary } from "../types/index";
 import { api } from "../services/api";
 
-// 模块级缓存
 let _cachedColors: Record<string, string> | null = null;
 async function getCategoryColors(): Promise<Record<string, string>> {
   if (_cachedColors) return _cachedColors;
@@ -16,90 +18,67 @@ async function getCategoryColors(): Promise<Record<string, string>> {
   }
 }
 
+const COLOR_MAP: Record<string, string> = {
+  green: '#22c55e', blue: '#3b82f6', yellow: '#eab308',
+  gray: '#9ca3af', red: '#ef4444', violet: '#8b5cf6',
+  cyan: '#06b6d4', orange: '#f97316', pink: '#ec4899', teal: '#14b8a6',
+};
 
 function isNew(createdAt: string) {
   return Date.now() - new Date(createdAt).getTime() < 86400000;
 }
 
-export function CardListItem({ 
-  card, 
-  onClick,
-  onDelete 
-}: { 
-  card: CardSummary; 
+export function CardListItem({
+  card, onClick, onDelete
+}: {
+  card: CardSummary;
   onClick?: () => void;
-  onDelete: (id: string) => void; 
-  highlight?: string 
+  onDelete: (id: string) => void;
+  highlight?: string
 }) {
   const [colors, setColors] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    getCategoryColors().then(setColors);
-  }, []);
+  useEffect(() => { getCategoryColors().then(setColors); }, []);
 
   const progressValue = card.schedule ? Math.min((card.schedule.consecutive_correct / 3) * 100, 100) : 0;
   const isMastered = card.schedule && card.schedule.consecutive_correct >= 3;
 
+  const badgeStyle = {
+    backgroundColor: `${COLOR_MAP[colors[card.category] || 'gray']}15`,
+    color: COLOR_MAP[colors[card.category] || 'gray'],
+    borderColor: `${COLOR_MAP[colors[card.category] || 'gray']}30`,
+  };
+
   return (
-    <Paper
-      radius="md"
-      style={{
-        background: 'var(--color-bg-secondary)',
-        border: '1px solid var(--color-border)',
-        overflow: 'hidden',
-        transition: 'border-color 150ms ease, box-shadow 200ms ease',
-        cursor: 'pointer'
-      }}
+    <div
+      className="rounded-lg border border-border bg-card overflow-hidden transition-all cursor-pointer hover:border-muted-foreground/30 hover:shadow-sm"
       onClick={onClick}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = 'var(--color-border-hover)';
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = 'var(--color-border)';
-      }}
     >
-      <Group
-        p="sm"
-        px="md"
-        wrap="nowrap"
-      >
-        <Badge
-          color={colors[card.category] || "gray"}
-          variant="dot"
-          size="xs"
-          style={{ flexShrink: 0 }}
-        >
+      <div className="flex items-center gap-3 px-5 py-4">
+        <Badge variant="outline" className="shrink-0" style={badgeStyle}>
           {card.category}
         </Badge>
-        <Text fz="sm" style={{ flex: 1 }} truncate>
-          {card.title}
-        </Text>
+        <span className="text-base flex-1 truncate">{card.title}</span>
         {isNew(card.created_at) && (
-          <Badge color="blue" variant="light" size="xs">NEW</Badge>
+          <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/30 text-xs">NEW</Badge>
         )}
-        
-        <Box w={80} ml="sm" mr="xs" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Progress 
-            value={progressValue} 
-            size="sm" 
-            color={isMastered ? 'green' : 'blue'} 
-            style={{ flex: 1 }} 
-            title={`掌握度: ${card.schedule?.consecutive_correct || 0}/3`}
+        <div className="w-20 ml-2 mr-1 flex items-center">
+          <Progress
+            value={progressValue}
+            className={`h-1.5 ${isMastered ? '[&>div]:bg-green-500' : '[&>div]:bg-blue-500'}`}
           />
-        </Box>
-
-        <Text fz="xs" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+        </div>
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
           {new Date(card.created_at).toLocaleDateString()}
-        </Text>
-        <ActionIcon
-          variant="subtle"
-          color="red"
-          size="sm"
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-destructive hover:text-destructive"
           onClick={e => { e.stopPropagation(); onDelete(card.id); }}
         >
-          🗑️
-        </ActionIcon>
-      </Group>
-    </Paper>
+          <Trash2 className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    </div>
   );
 }

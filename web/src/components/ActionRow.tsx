@@ -1,40 +1,33 @@
 import { useNavigate } from "react-router-dom";
-import { Button, Group } from "@mantine/core";
+import { Button } from "@/components/ui/button";
 
 export function ActionRow({ onImportClick }: { onImportClick: () => void }) {
   const navigate = useNavigate();
   return (
-    <Group justify="center" gap="md" mt="lg">
+    <div className="flex justify-center gap-4 mt-6">
       <Button
-        variant="light"
-        color="blue"
+        variant="secondary"
         size="lg"
-        radius="md"
+        className="flex-1 max-w-[240px] min-h-[56px]"
         onClick={() => navigate("/cards")}
-        style={{ flex: 1, maxWidth: 240, minHeight: 56 }}
       >
         📋 知识筛选
       </Button>
       <Button
-        variant="filled"
-        color="brand"
         size="lg"
-        radius="md"
+        className="flex-1 max-w-[240px] min-h-[56px]"
         onClick={() => navigate("/review")}
-        style={{ flex: 1, maxWidth: 240, minHeight: 56 }}
       >
         🧠 知识学习
       </Button>
       <Button
-        variant="light"
-        color="violet"
+        variant="secondary"
         size="lg"
-        radius="md"
+        className="flex-1 max-w-[240px] min-h-[56px]"
         onClick={onImportClick}
-        style={{ flex: 1, maxWidth: 240, minHeight: 56 }}
       >
         📤 知识导入
       </Button>
-    </Group>
+    </div>
   );
 }

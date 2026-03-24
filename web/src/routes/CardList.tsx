@@ -1,6 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Container, Group, Title, Stack, Text, ActionIcon, SegmentedControl, Select, Box, Modal, Badge, ScrollArea, TypographyStylesProvider } from "@mantine/core";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useCards } from "../hooks/useCards";
@@ -8,23 +14,24 @@ import { SearchBar } from "../components/SearchBar";
 import { CardListItem } from "../components/CardListItem";
 import { showToast } from "../components/Toast";
 import { api } from "../services/api";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import type { CardDetail } from "../types/index";
 
 export default function CardList() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const typeParam = searchParams.get("type") || "all";
-  
+
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
-  
+
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
   const [cardDetail, setCardDetail] = useState<CardDetail | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const { cards, loading, deleteCard } = useCards({ 
-    keyword: keyword || undefined, 
+  const { cards, loading, deleteCard } = useCards({
+    keyword: keyword || undefined,
     type: typeParam === 'all' ? undefined : typeParam,
     category: category || undefined
   });
@@ -60,135 +67,116 @@ export default function CardList() {
   };
 
   return (
-    <Container size="xl" py="xl">
-      <Group mb="lg" align="center">
-        <ActionIcon variant="subtle" color="gray" size="lg" onClick={() => navigate("/")}>
-          ←
-        </ActionIcon>
-        <Title order={3} style={{ flex: 1 }}>知识库管理</Title>
-      </Group>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="flex items-center gap-3 mb-6">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h3 className="text-xl font-semibold flex-1">知识库管理</h3>
+      </div>
 
-      <Stack mb="xl" gap="md">
-        <SegmentedControl
-          value={typeParam}
-          onChange={handleTypeChange}
-          data={[
-            { label: '📚 全部', value: 'all' },
-            { label: '📅 待复习', value: 'due' },
-            { label: '🎓 已掌握', value: 'mastered' }
-          ]}
-          fullWidth
-          radius="md"
-        />
-        <Group align="flex-start" grow>
-          <Box style={{ flex: 1 }}>
+      <div className="flex flex-col gap-4 mb-8">
+        <Tabs value={typeParam} onValueChange={handleTypeChange} className="w-full">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="all">📚 全部</TabsTrigger>
+            <TabsTrigger value="due">📅 待复习</TabsTrigger>
+            <TabsTrigger value="mastered">🎓 已掌握</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="flex gap-3 items-start">
+          <div className="flex-1">
             <SearchBar onSearch={setKeyword} />
-          </Box>
-          <Select 
-            placeholder="按分类筛选"
-            data={categories}
-            value={category}
-            onChange={setCategory}
-            clearable
-            size="md"
-            radius="md"
-            styles={{
-              input: {
-                background: 'var(--color-bg-secondary)',
-                borderColor: 'var(--color-border)',
-                '&:focus': { borderColor: 'var(--mantine-color-brand-5)' },
-              },
-            }}
-          />
-        </Group>
-      </Stack>
+          </div>
+          <Select value={category || ""} onValueChange={(v) => setCategory(v || null)}>
+            <SelectTrigger className="w-[180px] bg-secondary border-border">
+              <SelectValue placeholder="按分类筛选" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map(cat => (
+                <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       {loading ? (
-        <Text c="dimmed" ta="center" py="xl">加载中...</Text>
+        <p className="text-muted-foreground text-center py-8">加载中...</p>
       ) : (
-        <Stack gap="sm">
+        <div className="flex flex-col gap-2">
           {cards.map(card => (
-            <CardListItem 
-              key={card.id} 
-              card={card} 
+            <CardListItem
+              key={card.id}
+              card={card}
               onClick={() => setSelectedCardId(card.id)}
-              onDelete={(id) => handleDelete(id)} 
-              highlight={keyword} 
+              onDelete={(id) => handleDelete(id)}
+              highlight={keyword}
             />
           ))}
-          {cards.length === 0 && <Text c="dimmed" ta="center" py="xl">没有找到符合条件的知识卡片</Text>}
-        </Stack>
+          {cards.length === 0 && <p className="text-muted-foreground text-center py-8">没有找到符合条件的知识卡片</p>}
+        </div>
       )}
 
-      <Modal
-        opened={!!selectedCardId}
-        onClose={() => setSelectedCardId(null)}
-        title={cardDetail ? <Title order={4}>{cardDetail.title}</Title> : "正在读取知识..."}
-        size="lg"
-        centered
-        overlayProps={{ backgroundOpacity: 0.55, blur: 3 }}
-      >
-        {detailLoading || !cardDetail ? (
-          <Text c="dimmed" ta="center" py="xl">加载缓存中...</Text>
-        ) : (
-          <Stack gap="md">
-            <Group>
-              <Select
-                size="xs"
-                data={categories}
-                value={cardDetail.category}
-                onChange={async (val) => {
-                  if (val && val !== cardDetail.category) {
-                    try {
-                      await api.updateCardCategory(cardDetail.id, val);
-                      setCardDetail(prev => prev ? { ...prev, category: val } : prev);
-                      showToast(`分类已更改为 ${val}`, "success");
-                    } catch { showToast("分类更新失败", "error"); }
-                  }
-                }}
-                styles={{
-                  input: {
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    border: '1px solid rgba(59, 130, 246, 0.3)',
-                    borderRadius: '12px',
-                    color: 'rgba(96, 165, 250, 0.9)',
-                    fontSize: '0.75rem',
-                    fontWeight: 600,
-                    padding: '2px 10px',
-                    minHeight: 'unset',
-                    height: '24px',
-                    cursor: 'pointer',
-                  }
-                }}
-              />
-              {cardDetail.tags.map(t => <Badge key={t} variant="outline" size="sm">{t}</Badge>)}
-            </Group>
-            
-            <Text fz="sm" c="dimmed">{cardDetail.brief}</Text>
-            
-            <ScrollArea h="50vh" type="auto" offsetScrollbars>
-              <TypographyStylesProvider className="flashcard-body-text" style={{ padding: '0.5rem 0' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{cardDetail.detail}</ReactMarkdown>
-              </TypographyStylesProvider>
-            </ScrollArea>
-           
-            <Group justify="space-between" mt="md" pt="md" style={{ borderTop: '1px solid var(--color-border)' }}>
-              <Text fz="xs" c="dimmed">
-                添加于: {new Date(cardDetail.created_at).toLocaleString()}
-              </Text>
-              <Text fz="xs" c="dimmed">
-                掌握状态: {cardDetail.schedule.consecutive_correct}/3 
-                (下次复习: {cardDetail.schedule.next_review_date})
-              </Text>
-            </Group>
-            <Group justify="flex-end" mt="xs">
-               <ActionIcon variant="light" color="red" size="md" onClick={() => handleDelete(cardDetail.id)} title="移出知识库">
-                  🗑️
-               </ActionIcon>
-            </Group>
-          </Stack>
-        )}
-      </Modal>
-    </Container>
+      <Dialog open={!!selectedCardId} onOpenChange={(open) => { if (!open) setSelectedCardId(null); }}>
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{cardDetail ? cardDetail.title : "正在读取知识..."}</DialogTitle>
+          </DialogHeader>
+          {detailLoading || !cardDetail ? (
+            <p className="text-muted-foreground text-center py-8">加载缓存中...</p>
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Select
+                  value={cardDetail.category}
+                  onValueChange={async (val) => {
+                    if (val && val !== cardDetail.category) {
+                      try {
+                        await api.updateCardCategory(cardDetail.id, val);
+                        setCardDetail(prev => prev ? { ...prev, category: val } : prev);
+                        showToast(`分类已更改为 ${val}`, "success");
+                      } catch { showToast("分类更新失败", "error"); }
+                    }
+                  }}
+                >
+                  <SelectTrigger className="w-auto h-7 text-xs bg-blue-500/10 border-blue-500/30 text-blue-400 rounded-xl px-3">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {cardDetail.tags.map(t => <Badge key={t} variant="outline" className="text-xs">{t}</Badge>)}
+              </div>
+
+              <p className="text-sm text-muted-foreground">{cardDetail.brief}</p>
+
+              <div className="max-h-[50vh] overflow-y-auto">
+                <div className="prose-kb text-sm" style={{ padding: '0.5rem 0' }}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{cardDetail.detail}</ReactMarkdown>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-border">
+                <p className="text-xs text-muted-foreground">
+                  添加于: {new Date(cardDetail.created_at).toLocaleString()}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  掌握状态: {cardDetail.schedule.consecutive_correct}/3
+                  (下次复习: {cardDetail.schedule.next_review_date})
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(cardDetail.id)} title="移出知识库">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

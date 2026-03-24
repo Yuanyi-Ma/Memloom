@@ -1,7 +1,6 @@
 import { render, screen, act } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { vi, describe, it, expect } from 'vitest';
-import { MantineProvider } from '@mantine/core';
 import Review from './Review';
 
 vi.mock('../hooks/useReview', () => ({
@@ -17,7 +16,6 @@ vi.mock('../hooks/useReview', () => ({
   }),
 }));
 
-// Mock the zustand store simply for test
 vi.mock('../stores/reviewStore', () => ({
   useReviewStore: {
     getState: () => ({
@@ -32,11 +30,9 @@ describe('Review Page Redesign', () => {
     let result: any;
     await act(async () => {
       result = render(
-        <MantineProvider>
-          <BrowserRouter>
-            <Review />
-          </BrowserRouter>
-        </MantineProvider>
+        <BrowserRouter>
+          <Review />
+        </BrowserRouter>
       );
     });
     return result;
@@ -50,17 +46,12 @@ describe('Review Page Redesign', () => {
   it('renders the question text inside a 3D flashcard', async () => {
     const { container } = await renderReview();
     expect(screen.getByText('What is Quantum Entanglement?')).toBeInTheDocument();
-    
-    // Specifically verify the flashcard 3D class is present
     const flashcard = container.querySelector('.flashcard-3d');
     expect(flashcard).toBeInTheDocument();
   });
 
   it('renders minimalist feedback buttons with glowing logic', async () => {
     const { container } = await renderReview();
-    
-    // In question state, the footer should have the buttons, but in our redesign, 
-    // we want them to use sleek minimal components.
     const feedbackBtns = container.querySelectorAll('.feedback-btn-minimal');
     expect(feedbackBtns.length).toBeGreaterThan(0);
   });

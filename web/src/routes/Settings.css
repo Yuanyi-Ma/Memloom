@@ -33,9 +33,10 @@
   display: flex !important;
   align-items: center !important;
   width: 100% !important;
-  padding: 12px 16px !important;
+  padding: 14px 18px !important;
   border-radius: 12px !important;
   color: #94a3b8 !important;
+  font-size: 1rem !important;
   font-weight: 500 !important;
   transition: all 0.2s ease !important;
   margin-bottom: 8px !important;
@@ -61,33 +62,7 @@
   max-width: 1400px;
 }
 
-/* Glass Inputs */
-.glass-input-wrapper .mantine-Input-input.glass-input,
-.glass-input-wrapper .mantine-Select-input.glass-input,
-.glass-input-wrapper .mantine-NumberInput-input.glass-input {
-  background: rgba(15, 23, 42, 0.4) !important;
-  backdrop-filter: blur(12px) !important;
-  -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.1) !important;
-  color: #f8fafc !important;
-  transition: all 0.3s ease !important;
-  border-radius: 12px !important;
-}
-
-.glass-input-wrapper .mantine-Input-input.glass-input:focus,
-.glass-input-wrapper .mantine-Select-input.glass-input:focus,
-.glass-input-wrapper .mantine-NumberInput-input.glass-input:focus {
-  border-color: rgba(59, 130, 246, 0.6) !important;
-  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2) !important;
-  background: rgba(15, 23, 42, 0.6) !important;
-}
-
-.glass-input-wrapper .mantine-InputWrapper-label {
-  color: #cbd5e1 !important;
-  font-weight: 500 !important;
-  margin-bottom: 8px !important;
-  font-size: 0.95rem;
-}
+/* Legacy inputs removed */
 
 /* Skill Card Hover */
 .skill-card-hover:hover {

@@ -1,13 +1,20 @@
 import { useState, useRef } from "react";
-import {
-  Group, Badge, ActionIcon, TextInput, Button, Stack,
-  ColorSwatch, Popover, SimpleGrid, Text, Box,
-} from "@mantine/core";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { X } from "lucide-react";
 
 const PRESET_COLORS = [
   "green", "blue", "yellow", "gray", "red",
   "violet", "cyan", "orange", "pink", "teal",
 ];
+
+const COLOR_HEX: Record<string, string> = {
+  green: '#22c55e', blue: '#3b82f6', yellow: '#eab308',
+  gray: '#9ca3af', red: '#ef4444', violet: '#8b5cf6',
+  cyan: '#06b6d4', orange: '#f97316', pink: '#ec4899', teal: '#14b8a6',
+};
 
 interface CategoryManagerProps {
   categories: string[];
@@ -51,152 +58,109 @@ export function CategoryManager({ categories, categoryColors, onChange }: Catego
     setColorPickerFor(null);
   }
 
-  function handleDragStart(idx: number) {
-    setDragIdx(idx);
-  }
-
-  function handleDragEnter(idx: number) {
-    dragCounter.current++;
-    setDragOverIdx(idx);
-  }
-
-  function handleDragLeave() {
-    dragCounter.current--;
-    if (dragCounter.current <= 0) {
-      setDragOverIdx(null);
-      dragCounter.current = 0;
-    }
-  }
-
+  function handleDragStart(idx: number) { setDragIdx(idx); }
+  function handleDragEnter(idx: number) { dragCounter.current++; setDragOverIdx(idx); }
+  function handleDragLeave() { dragCounter.current--; if (dragCounter.current <= 0) { setDragOverIdx(null); dragCounter.current = 0; } }
   function handleDrop(targetIdx: number) {
-    if (dragIdx === null || dragIdx === targetIdx) {
-      setDragIdx(null);
-      setDragOverIdx(null);
-      dragCounter.current = 0;
-      return;
-    }
+    if (dragIdx === null || dragIdx === targetIdx) { setDragIdx(null); setDragOverIdx(null); dragCounter.current = 0; return; }
     const reordered = [...categories];
     const [moved] = reordered.splice(dragIdx, 1);
     reordered.splice(targetIdx, 0, moved);
     onChange(reordered, categoryColors);
-    setDragIdx(null);
-    setDragOverIdx(null);
-    dragCounter.current = 0;
+    setDragIdx(null); setDragOverIdx(null); dragCounter.current = 0;
   }
-
-  function handleDragEnd() {
-    setDragIdx(null);
-    setDragOverIdx(null);
-    dragCounter.current = 0;
-  }
+  function handleDragEnd() { setDragIdx(null); setDragOverIdx(null); dragCounter.current = 0; }
 
   return (
-    <Stack gap="md">
-      <Group gap={6} style={{
-        padding: '8px 12px',
-        borderRadius: 8,
-        background: 'rgba(59,130,246,0.06)',
-        border: '1px solid rgba(59,130,246,0.12)',
-      }}>
-        <Text fz="sm" style={{ opacity: 0.7 }}>↕️</Text>
-        <Text fz="xs" c="dimmed" lh={1.5}>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-500/[0.06] border border-blue-500/[0.12]">
+        <span className="text-sm opacity-70">↕️</span>
+        <span className="text-xs text-muted-foreground leading-relaxed">
           拖拽调整顺序 · 排在前面的分类将被优先匹配
-        </Text>
-      </Group>
+        </span>
+      </div>
 
-      <Box style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        {categories.map((cat, idx) => (
-          <Box
-            key={cat}
-            draggable
-            onDragStart={() => handleDragStart(idx)}
-            onDragEnter={() => handleDragEnter(idx)}
-            onDragLeave={handleDragLeave}
-            onDragOver={e => e.preventDefault()}
-            onDrop={() => handleDrop(idx)}
-            onDragEnd={handleDragEnd}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              cursor: 'grab',
-              opacity: dragIdx === idx ? 0.4 : 1,
-              transform: dragOverIdx === idx && dragIdx !== idx ? 'scale(1.05)' : 'none',
-              transition: 'transform 0.15s ease, opacity 0.15s ease',
-              borderRadius: 6,
-              padding: '2px 4px',
-              outline: dragOverIdx === idx && dragIdx !== idx
-                ? '2px solid rgba(59,130,246,0.5)'
-                : '2px solid transparent',
-            }}
-          >
-            <Text fz="xs" c="dimmed" fw={600} style={{ minWidth: 14, textAlign: 'center', userSelect: 'none' }}>
-              {idx + 1}
-            </Text>
-            <Popover
-              opened={colorPickerFor === cat}
-              onClose={() => setColorPickerFor(null)}
-              position="bottom"
+      <div className="flex flex-wrap gap-1.5">
+        {categories.map((cat, idx) => {
+          const catColor = categoryColors[cat] || "gray";
+          const hex = COLOR_HEX[catColor] || '#9ca3af';
+          return (
+            <div
+              key={cat}
+              draggable
+              onDragStart={() => handleDragStart(idx)}
+              onDragEnter={() => handleDragEnter(idx)}
+              onDragLeave={handleDragLeave}
+              onDragOver={e => e.preventDefault()}
+              onDrop={() => handleDrop(idx)}
+              onDragEnd={handleDragEnd}
+              className="flex items-center gap-1 cursor-grab rounded-md px-1 py-0.5 transition-all"
+              style={{
+                opacity: dragIdx === idx ? 0.4 : 1,
+                transform: dragOverIdx === idx && dragIdx !== idx ? 'scale(1.05)' : 'none',
+                outline: dragOverIdx === idx && dragIdx !== idx ? `2px solid ${hex}50` : '2px solid transparent',
+              }}
             >
-              <Popover.Target>
-                <ColorSwatch
-                  color={`var(--mantine-color-${categoryColors[cat] || "gray"}-6)`}
-                  size={16}
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setColorPickerFor(cat)}
-                />
-              </Popover.Target>
-              <Popover.Dropdown>
-                <SimpleGrid cols={5} spacing={4}>
-                  {PRESET_COLORS.map(c => (
-                    <ColorSwatch
-                      key={c}
-                      color={`var(--mantine-color-${c}-6)`}
-                      size={24}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => setColor(cat, c)}
-                    />
-                  ))}
-                </SimpleGrid>
-              </Popover.Dropdown>
-            </Popover>
-            <Badge
-              color={categoryColors[cat] || "gray"}
-              variant="light"
-              rightSection={
-                categories.length > 1 ? (
-                  <ActionIcon
-                    size={14}
-                    variant="transparent"
-                    color="red"
-                    onClick={() => removeCategory(cat)}
-                  >
-                    ×
-                  </ActionIcon>
-                ) : null
-              }
-            >
-              {cat}
-            </Badge>
-          </Box>
-        ))}
-      </Box>
+              <span className="text-xs text-muted-foreground font-semibold min-w-[14px] text-center select-none">
+                {idx + 1}
+              </span>
+              <div
+                className="rounded-full w-4 h-4 cursor-pointer shrink-0 border border-white/20"
+                style={{ background: hex }}
+                onClick={() => setColorPickerFor(cat)}
+              />
+              <span
+                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium"
+                style={{ backgroundColor: `${hex}15`, color: hex }}
+              >
+                {cat}
+                {categories.length > 1 && (
+                  <button className="text-destructive hover:text-destructive/80 ml-0.5" onClick={() => removeCategory(cat)}>
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </span>
+            </div>
+          );
+        })}
+      </div>
 
-      <Group gap="xs">
-        <TextInput
+      <div className="flex gap-2">
+        <Input
           placeholder="新分类名称"
-          size="xs"
           value={newCat}
           onChange={e => setNewCat(e.currentTarget.value)}
           onKeyDown={e => e.key === "Enter" && addCategory()}
-          style={{ flex: 1 }}
+          className="flex-1 h-8 text-sm bg-secondary border-border"
         />
-        <Button size="xs" variant="light" onClick={addCategory} disabled={!toSlug(newCat)}>
+        <Button size="sm" variant="secondary" onClick={addCategory} disabled={!toSlug(newCat)}>
           添加
         </Button>
-      </Group>
+      </div>
 
-      <Text fz="xs" c="dimmed">至少保留 1 个分类。新分类自动转为 slug 格式（小写+连字符）。</Text>
-    </Stack>
+      <p className="text-xs text-muted-foreground">至少保留 1 个分类。新分类自动转为 slug 格式（小写+连字符）。</p>
+
+      {/* Color Picker Dialog */}
+      <Dialog open={!!colorPickerFor} onOpenChange={(open) => { if (!open) setColorPickerFor(null); }}>
+        <DialogContent className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle>选择颜色 — {colorPickerFor}</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-5 gap-2">
+            {PRESET_COLORS.map(c => (
+              <button
+                key={c}
+                className="rounded-full w-8 h-8 border-2 transition-all hover:scale-110"
+                style={{
+                  background: COLOR_HEX[c],
+                  borderColor: categoryColors[colorPickerFor || ''] === c ? 'white' : 'transparent',
+                }}
+                onClick={() => colorPickerFor && setColor(colorPickerFor, c)}
+              />
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
