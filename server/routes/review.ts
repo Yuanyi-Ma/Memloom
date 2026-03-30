@@ -3,6 +3,7 @@ import { HttpHandler, HttpRequest, HttpResponse } from '../types/plugin.js';
 import { getDueCards, getCardById } from '../db/queries.js';
 import { buildReviewQueue } from '../services/aggregator.js';
 import { triggerAgentRun } from '../services/gatewayClient.js';
+import { readSkillContent } from '../utils/skill.js';
 
 export function createReviewHandler(db: Database): HttpHandler {
   return async (req: HttpRequest, res: HttpResponse) => {
@@ -45,18 +46,22 @@ export function createReviewHandler(db: Database): HttpHandler {
       if (!card) { res.status(404).json({ error: 'Card not found' }); return true; }
 
       try {
-        // 通过 Agent RPC 发送复习对话，获取 Agent 真实回复
+        // 每次对话建立独立 session，注入 skill 指令
+        const skillInstructions = readSkillContent('kb-feynman-review') || '';
+        const sessionKey = `memloom-review-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const cardContext = [
+          `[费曼复习] 用户正在复习知识卡片「${card.title}」`,
+          `卡片内容: ${card.detail || card.brief}`,
+          `复习问题: ${card.feynman_seed}`,
+          ``,
+          `用户回答: ${userMessage}`,
+        ].join('\n');
+        const message = skillInstructions
+          ? `${skillInstructions}\n\n---\n\n${cardContext}`
+          : `${cardContext}\n\n请以苏格拉底式提问方式引导用户深入理解，指出回答中的不足，鼓励其用自己的话解释。回复请简短（100字以内）。`;
         const agentReply = await triggerAgentRun({
-          sessionKey: `memloom-review-${cardId}`,
-          message: [
-            `[费曼复习] 用户正在复习知识卡片「${card.title}」`,
-            `卡片内容: ${card.detail || card.brief}`,
-            `复习问题: ${card.feynman_seed}`,
-            ``,
-            `用户回答: ${userMessage}`,
-            ``,
-            `请以苏格拉底式提问方式引导用户深入理解，指出回答中的不足，鼓励其用自己的话解释。回复请简短（100字以内）。`,
-          ].join('\n'),
+          sessionKey,
+          message,
           timeoutMs: 60_000,
         });
         console.log(`[Memloom Review] Agent reply (${agentReply.length} chars): ${agentReply.slice(0, 100)}`);

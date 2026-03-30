@@ -26,7 +26,9 @@ export function scanNewSessionMessages(
     const sessionsDir = path.join(agentsDir, agent, 'sessions');
     if (!fs.existsSync(sessionsDir)) continue;
 
-    const files = fs.readdirSync(sessionsDir).filter(f => f.endsWith('.jsonl'));
+    const files = fs.readdirSync(sessionsDir).filter(f =>
+      f.endsWith('.jsonl') && !f.startsWith('memloom-')
+    );
     for (const file of files) {
       const filePath = path.join(sessionsDir, file);
       const lines = fs.readFileSync(filePath, 'utf-8').split('\n');

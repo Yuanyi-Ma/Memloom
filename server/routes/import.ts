@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3';
 import { HttpHandler, HttpRequest, HttpResponse } from '../types/plugin.js';
 import { triggerAgentRun } from '../services/gatewayClient.js';
+import { readSkillContent } from '../utils/skill.js';
 
 /** 按 `---` 或 `## ` 标题拆分文档为合理大小的块 */
 export function splitIntoChunks(text: string, maxChars = 1500): string[] {
@@ -39,13 +40,15 @@ export function createImportHandler(db: Database): HttpHandler {
     const chunks = splitIntoChunks(combined);
     console.log(`[Memloom Import] Total ${combined.length} chars → ${chunks.length} chunks`);
 
+    const skillInstructions = readSkillContent('kb-file-import') || '';
     let triggered = 0;
     for (let i = 0; i < chunks.length; i++) {
       try {
-        await triggerAgentRun({
-          sessionKey: `memloom-import-${Date.now()}-${i}`,
-          message: `请从以下文档片段中提取知识并入库：\n\n${chunks[i]}`,
-        });
+        const sessionKey = `memloom-import-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const message = skillInstructions
+          ? `${skillInstructions}\n\n---\n\n以下是需要提取知识的文档片段：\n\n${chunks[i]}`
+          : `请从以下文档片段中提取知识并入库：\n\n${chunks[i]}`;
+        await triggerAgentRun({ sessionKey, message });
         triggered++;
         console.log(`[Memloom Import] Chunk ${i + 1}/${chunks.length}: Agent triggered`);
       } catch (err) {

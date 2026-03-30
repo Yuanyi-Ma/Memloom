@@ -8,6 +8,7 @@ import { calculateNextSchedule } from '../services/scheduler.js';
 import { readFullSession } from '../services/extractor.js';
 import { triggerAgentRun } from '../services/gatewayClient.js';
 import { validateCard, findDuplicate } from '../services/cardValidator.js';
+import { readSkillContent } from '../utils/skill.js';
 
 export function createCardsHandler(db: Database): HttpHandler {
   return async (req: HttpRequest, res: HttpResponse) => {
@@ -150,10 +151,12 @@ async function handleCapture(_db: Database, req: HttpRequest, res: HttpResponse)
   }
 
   try {
-    await triggerAgentRun({
-      sessionKey: `memloom-capture-${session_id}`,
-      message: `请回顾以下对话记录并提取知识：\n\n${conversationText}`,
-    });
+    const skillInstructions = readSkillContent('kb-active-capture') || '';
+    const sessionKey = `memloom-capture-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const message = skillInstructions
+      ? `${skillInstructions}\n\n---\n\n以下是需要提取知识的对话记录：\n\n${conversationText}`
+      : `请回顾以下对话记录并提取知识：\n\n${conversationText}`;
+    await triggerAgentRun({ sessionKey, message });
     res.status(200).json({ triggered: true });
   } catch (err) {
     res.status(500).json({ error: String(err) });

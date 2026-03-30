@@ -14,6 +14,7 @@ import { CardInput } from './db/types.js';
 import { ConversationChunk } from './services/extractor.js';
 import { triggerAgentRun } from './services/gatewayClient.js';
 import { validateCard, findDuplicate } from './services/cardValidator.js';
+import { readSkillContent } from './utils/skill.js';
 import path from 'path';
 import fs from 'fs';
 import http from 'http';
@@ -238,12 +239,14 @@ export default function register(api: OpenClawPluginApi) {
 
   // === 定时提取：通过 Agent RPC 触发知识提取 ===
   startExtractTimer(async (chunks: ConversationChunk[]) => {
+    const skillInstructions = readSkillContent('kb-active-capture') || '';
     for (const chunk of chunks) {
       try {
-        await triggerAgentRun({
-          sessionKey: `memloom-extract-${chunk.sessionId}`,
-          message: `请回顾以下对话记录并提取知识：\n\n${chunk.content}`,
-        });
+        const sessionKey = `memloom-extract-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const message = skillInstructions
+          ? `${skillInstructions}\n\n---\n\n以下是需要提取知识的对话记录：\n\n${chunk.content}`
+          : `请回顾以下对话记录并提取知识：\n\n${chunk.content}`;
+        await triggerAgentRun({ sessionKey, message });
         console.log(`[Memloom] Agent extraction triggered for session ${chunk.sessionId}`);
       } catch (err) {
         console.warn(`[Memloom] Extract error for session ${chunk.sessionId}:`, err);
