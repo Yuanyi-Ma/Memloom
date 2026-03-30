@@ -1,14 +1,13 @@
 import { Database } from 'better-sqlite3';
 import { HttpRequest, HttpResponse, HttpHandler } from '../types/plugin.js';
 import { queryCards, getCardById, softDeleteCard, insertCard, addNegativeFeedback, updateSchedule, addReviewRecord, updateCardStatus, updateCardCategory, searchCardsByTitle } from '../db/queries.js';
-import { normalizedSimilarity } from '../utils/similarity.js';
 import { appendNegativeSample } from '../services/negativeSamples.js';
 import { generateCardId } from '../utils/id.js';
 import { CardInput } from '../db/types.js';
 import { calculateNextSchedule } from '../services/scheduler.js';
 import { readFullSession } from '../services/extractor.js';
 import { triggerAgentRun } from '../services/gatewayClient.js';
-import { getCategories } from '../utils/config.js';
+import { validateCard, findDuplicate } from '../services/cardValidator.js';
 
 export function createCardsHandler(db: Database): HttpHandler {
   return async (req: HttpRequest, res: HttpResponse) => {
@@ -117,12 +116,7 @@ function handleIngest(db: Database, req: HttpRequest, res: HttpResponse): boolea
   const skipped: { title: string; reason: string }[] = [];
   for (const raw of cards) {
     // 服务端去重安全网
-    const existing = searchCardsByTitle(db, raw.title);
-    const tooSimilar = existing.find(e => {
-      const a = e.title.toLowerCase().replace(/[\s\-_、，,]/g, '');
-      const b = raw.title.toLowerCase().replace(/[\s\-_、，,]/g, '');
-      return a.includes(b) || b.includes(a) || normalizedSimilarity(a, b) > 0.7;
-    });
+    const tooSimilar = findDuplicate(db, raw.title);
     if (tooSimilar) {
       skipped.push({ title: raw.title, reason: `与已有知识「${tooSimilar.title}」高度相似` });
       continue;
@@ -242,38 +236,8 @@ function handleValidate(req: HttpRequest, res: HttpResponse): boolean {
     return true;
   }
 
-  const errors: string[] = [];
-  const cats = getCategories();
-
-  if (!card.title || card.title.trim().length === 0) {
-    errors.push('title 不能为空');
-  } else if (card.title.length > 15) {
-    errors.push(`title 超过 15 字限制（当前 ${card.title.length} 字）`);
-  }
-
-  if (!cats.includes(card.category)) {
-    errors.push(`category 必须是 ${cats.join(' / ')} 之一，当前值「${card.category}」不合法`);
-  }
-
-  if (!card.brief || card.brief.trim().length === 0) {
-    errors.push('brief 不能为空');
-  } else if (card.brief.length > 100) {
-    errors.push(`brief 超过 100 字限制（当前 ${card.brief.length} 字）`);
-  }
-
-  if (!card.detail || card.detail.trim().length === 0) {
-    errors.push('detail 不能为空');
-  } else if (card.detail.length < 150) {
-    errors.push(`detail 不足 150 字（当前 ${card.detail.length} 字）`);
-  } else if (card.detail.length > 300) {
-    errors.push(`detail 超过 300 字限制（当前 ${card.detail.length} 字）`);
-  }
-
-  if (!card.review_question || card.review_question.trim().length === 0) {
-    errors.push('review_question 不能为空');
-  }
-
-  if (errors.length > 0) {
+  const { valid, errors } = validateCard(card);
+  if (!valid) {
     res.status(200).json({ valid: false, errors });
   } else {
     res.status(200).json({ valid: true });

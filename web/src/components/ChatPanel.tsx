@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage } from "../types/index";
 import { ArrowUp } from "lucide-react";
+import { api } from "../services/api";
 
 export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initialQuestion?: string }) {
   const [messages, setMessages] = useState<ChatMessage[]>(
@@ -19,12 +20,8 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/review/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cardId, action: "start" }),
-    })
-      .then((res) => { if (!cancelled && res.ok) setInitialized(true); })
+    api.startChat(cardId)
+      .then(() => { if (!cancelled) setInitialized(true); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, [cardId]);
@@ -44,19 +41,7 @@ export function ChatPanel({ cardId, initialQuestion }: { cardId: string; initial
     setMessages((prev) => [...prev, { role: "assistant", content: "思考中...", isStreaming: true }]);
 
     try {
-      const res = await fetch("/api/review/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cardId, userMessage }),
-      });
-      if (!res.ok) {
-        setMessages((prev) => prev.map((m, i) =>
-          i === prev.length - 1 ? { ...m, content: "抱歉，对话服务暂时不可用。", isStreaming: false } : m
-        ));
-        setIsStreaming(false);
-        return;
-      }
-      const data = await res.json();
+      const data = await api.sendChatMessage(cardId, userMessage);
       setMessages((prev) => prev.map((m, i) =>
         i === prev.length - 1 ? { ...m, content: data.reply || "...", isStreaming: false } : m
       ));

@@ -100,5 +100,18 @@ export const api = {
   // Extract History API
   getExtractHistory: () =>
     request<ExtractHistoryItem[]>("/config/extract-history"),
+
+  // Chat API
+  startChat: (cardId: string) =>
+    request<void>("/review/chat", {
+      method: "POST",
+      body: JSON.stringify({ cardId, action: "start" }),
+    }),
+
+  sendChatMessage: (cardId: string, userMessage: string) =>
+    request<{ reply: string }>("/review/chat", {
+      method: "POST",
+      body: JSON.stringify({ cardId, userMessage }),
+    }),
 };
 

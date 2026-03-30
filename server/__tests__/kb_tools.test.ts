@@ -47,13 +47,14 @@ describe('kb_save_card 去重逻辑（集成测试）', () => {
     const saveTool = tools.find(t => t.name === 'kb_save_card');
     expect(saveTool).toBeDefined();
 
-    // 使用带有时间戳的唯一标题，避免跨测试去重冲突
-    const uniqueTitle = `测试卡片_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    // 使用符合校验规则的数据（title ≤15字, detail 150-300字）
+    const uniqueTitle = `测试卡_${Math.random().toString(36).slice(2, 6)}`;
+    const detail = '这是一段用于测试的详细内容，包含了足够多的字符以满足最低150字的限制要求。为了确保通过校验，这里需要写更多的内容来填充。知识卡片的详细内容应该包含底层逻辑和原理的解释，让读者能够真正理解这个概念的本质。这段文字的目的是达到150字的最低要求，同时保持内容的连贯性和可读性，这样测试才能准确反映实际使用场景。';
     const result = await saveTool.execute('test-call', {
       title: uniqueTitle,
       category: 'ai',
       brief: '简要描述',
-      detail: '详细内容',
+      detail,
       review_question: '复习问题',
     });
     expect(result.content[0].text).toContain('✅');
@@ -105,7 +106,7 @@ describe('kb_save_card 去重逻辑（集成测试）', () => {
     expect(result.content[0].text).toContain('title');
   });
 
-  it('标题超过 30 字拒绝', async () => {
+  it('标题超过 15 字拒绝', async () => {
     const tools: any[] = [];
     const mockApi = {
       config: {},
@@ -140,12 +141,13 @@ describe('kb_save_card 去重逻辑（集成测试）', () => {
     register(mockApi);
 
     const saveTool = tools.find(t => t.name === 'kb_save_card');
-    const uniqueTitle = `无标签知识_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const uniqueTitle = `无标签_${Math.random().toString(36).slice(2, 6)}`;
+    const detail = '这是一段用于测试的详细内容，包含了足够多的字符以满足最低150字的限制要求。为了确保通过校验，这里需要写更多的内容来填充。知识卡片的详细内容应该包含底层逻辑和原理的解释，让读者能够真正理解这个概念的本质。这段文字的目的是达到150字的最低要求，同时保持内容的连贯性和可读性，这样测试才能准确反映实际使用场景。';
     const result = await saveTool.execute('test-call', {
       title: uniqueTitle,
       category: 'ai',
       brief: '简要',
-      detail: '详细',
+      detail,
       review_question: '问题',
     });
     expect(result.content[0].text).toContain('✅');
