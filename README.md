@@ -66,15 +66,20 @@ Memloom 当前由五个业务 skill 和一个初始化 skill 组成。
 
 ### 方式一：作为独立工作区使用
 
+先克隆仓库，然后在这个目录里打开 Codex / Claude Code 等支持 skill 的 Agent：
+
 ```bash
 git clone https://github.com/Yuanyi-Ma/Memloom.git
 cd Memloom
-python3 .agents/skills/init/scripts/init.py \
-  --workspace "$PWD" \
-  --knowledge-dir "$PWD/knowledge" \
-  --install-review-deps \
-  --build-review-ui
 ```
+
+然后直接对 Agent 说：
+
+```text
+使用 init skill 初始化 Memloom，安装并构建 review UI。
+```
+
+`init` skill 会负责补齐 `knowledge/`、安装 review 前端依赖、构建审核 UI、重建索引，并解释后续该如何使用 `distill / merge / review / retrieve / recall`。
 
 ### 方式二：安装到已有 Agent 工作区
 
@@ -85,12 +90,15 @@ git clone https://github.com/Yuanyi-Ma/Memloom.git /tmp/memloom
 mkdir -p /path/to/your/workspace/.agents
 rsync -a /tmp/memloom/.agents/skills /path/to/your/workspace/.agents/
 cd /path/to/your/workspace
-python3 .agents/skills/init/scripts/init.py \
-  --workspace "$PWD" \
-  --knowledge-dir "$PWD/knowledge" \
-  --install-review-deps \
-  --build-review-ui
 ```
+
+如果当前 Agent 会话已经能读取新的 `.agents/skills`，直接对 Agent 说：
+
+```text
+使用 init skill 初始化 Memloom，安装并构建 review UI。
+```
+
+如果 Agent 没有识别到新 skill，重启当前 Agent 会话或重新打开这个工作区后再说同一句话。
 
 依赖要求：
 
@@ -99,6 +107,18 @@ python3 .agents/skills/init/scripts/init.py \
 - 本地 Claude Code 或 Codex 会话记录。没有历史会话也可以先初始化，后续产生会话后再运行 `distill`。
 
 ## 初始化
+
+用户主路径是让 Agent 调用 `init` skill，而不是手动调用 skill 内部脚本。你可以这样说：
+
+```text
+使用 init skill 初始化 Memloom。
+```
+
+或者：
+
+```text
+使用 init skill 初始化 Memloom，并安装、构建 review UI。
+```
 
 `init` 会补齐工作区结构：
 
@@ -113,6 +133,10 @@ python3 .agents/skills/init/scripts/init.py \
 - `knowledge/review_log.jsonl`
 - `knowledge/agent_index.md`
 - `knowledge/agent_views/*.md`
+
+### 无 Agent 环境的备用命令
+
+如果你只是想在没有 Agent 的环境里调试，可以直接运行 `init` skill 的脚本。正常使用时不需要这样做。
 
 只检查会做什么、不写文件：
 
@@ -135,10 +159,15 @@ python3 .agents/skills/init/scripts/init.py \
 
 ## 日常使用
 
-1. 运行 `init`，确认工作区和 review UI 可用。
-2. 用 `distill` 从本地 Claude Code / Codex 主会话中选择要处理的会话，生成第一阶段候选。
-3. `distill` 完成后交给 `merge`，让候选进入 `pending.json` 或 `duplicates.json`。
-4. 用 `review` 启动本地审核 UI：
+1. 对 Agent 说：`使用 init skill 初始化 Memloom`，确认工作区和 review UI 可用。
+2. 对 Agent 说：`使用 distill skill 整理最近的 Agent 会话`，从本地 Claude Code / Codex 主会话中选择要处理的会话，生成第一阶段候选。
+3. `distill` 完成后会交给 `merge`，让候选进入 `pending.json` 或 `duplicates.json`。
+4. 对 Agent 说：`使用 review skill 启动审核 UI`，在本地浏览器里审核候选。
+5. 用户审核后，接受的知识进入 `knowledge/canonical/*.json`。
+6. Agent 需要使用已审核知识时，对 Agent 说：`使用 retrieve skill 查找相关知识`。
+7. 用户想复习已审核知识时，对 Agent 说：`使用 recall skill 复习知识`。
+
+无 Agent 环境下，也可以直接启动 review server 作为备用方式：
 
 ```bash
 node .agents/skills/review/scripts/review_server.js \
@@ -152,10 +181,6 @@ node .agents/skills/review/scripts/review_server.js \
 ```text
 http://127.0.0.1:4177
 ```
-
-5. 用户审核后，接受的知识进入 `knowledge/canonical/*.json`。
-6. Agent 需要使用已审核知识时，用 `retrieve` 按索引和 id 读取。
-7. 用户想复习已审核知识时，用 `recall` 生成复习计划并记录反馈。
 
 ## 数据边界
 
@@ -185,4 +210,3 @@ cd .agents/skills/review
 npm ci
 npm run build
 ```
-
