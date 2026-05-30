@@ -1,0 +1,16 @@
+knowledge/
+.DS_Store
+
+# Review UI local environment and build output.
+.agents/skills/review/node_modules/
+.agents/skills/review/public/
+
+# Python and test caches.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Temporary run artifacts.
+distill_run_*/
+*.tmp
+
